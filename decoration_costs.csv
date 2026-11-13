@@ -10,11 +10,11 @@ Id,ProductCode,Name,Decoration_Cost__c,Additional_Location_Cost__c,Source_Note
 01tPU00000NSUVlYAP,FauxSuedePatch,Faux Suede Patch w/Laser Etching,0.57,0.57,Faux suede super fiber 1.4mm
 01tPU00000NSUIrYAP,FeltApplique,Felt Applique,0.36,0.36,1.4mm felt applique
 01tPU00000NSVA5YAP,FlatEmbroidery,Flat Embroidery,0.7,0.49,10K flat main; 7K flat 2nd location
-01tPU00000PmWYfYAN,individualpolybag,Individual Poly Bag,,,No cost in the costing sheets - ENTER or leave blank
+01tPU00000PmWYfYAN,individualpolybag,Individual Poly Bag,,0.1,No cost in the costing sheets - ENTER or leave blank
 01tOu00000EtgPxIAJ,largeflatemroidery,Large Flat Embroidery,1.05,0.99,15K flat 1.05; calculator large flat 2nd location 0.99 - CONFIRM
-01tPU00000PmMSrYAN,licenseingsticker,Licensing Sticker,,,No cost in the costing sheets - ENTER or leave blank
+01tPU00000PmMSrYAN,licenseingsticker,Licensing Sticker,,0.05,No cost in the costing sheets - ENTER or leave blank
 01tPU00000PmCGcYAN,sublimationpanelorvisor,Sublimation Panel or Visor,1.5,0.75,No cost in the costing sheets - ENTER or leave blank
 01tPU00000NSU7ZYAX,SublimationPatch,Sublimation Patch,0.82,0.82,ADG woven paper sublimation print
 01tPU00000NSUHFYA5,TwillApplique,Twill Applique,0.39,0.39,Chino twill applique
-01tPU00000PmHubYAF,upcsticker,UPC Sticker,,,No cost in the costing sheets - ENTER or leave blank
+01tPU00000PmHubYAF,upcsticker,UPC Sticker,,0.05,No cost in the costing sheets - ENTER or leave blank
 01tPU00000NikptYAB,customvisorrope,Visor Rope,,0.25,additional location only
