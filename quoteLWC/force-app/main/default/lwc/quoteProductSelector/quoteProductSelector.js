@@ -9,6 +9,8 @@ import getBaseStylePricing from '@salesforce/apex/QuoteProductController.getBase
 import getManufacturerAirRates from '@salesforce/apex/QuoteProductController.getManufacturerAirRates';
 import getQuotePdfBase64 from '@salesforce/apex/QuoteProductController.getQuotePdfBase64';
 
+const NA_CUSTOM_SUFFIX = 'MCCUST00';
+
 const STEP_LOADING = 'loading';
 const STEP_PRODUCT = 'product';
 const STEP_ESTIMATOR = 'estimator';
@@ -50,15 +52,19 @@ export default class QuoteProductSelector extends NavigationMixin(LightningEleme
     get currentExistingPricing() {
         const productId = this.currentProduct?.Id;
         if (productId && this.selectedProductsMap[productId]) {
-            const isQuick = this.selectedProductsMap[productId].isQuickProduct;
-            return this.selectedProductsMap[productId].pricingRows.map(pr => ({
-                ...pr,
-                isBaseTier: this.filteredTiers.find(t => t.quantity === pr.quantity)?.isBaseTier || false,
-                hasAir: isQuick ? false : [144, 288, 576, 1008].includes(pr.quantity),
-                rowClass: this.filteredTiers.find(t => t.quantity === pr.quantity)?.isBaseTier
-                    ? 'slds-hint-parent base-tier-row'
-                    : 'slds-hint-parent'
-            }));
+            const entry = this.selectedProductsMap[productId];
+            // Quick Turn and North American Custom cards have no base tier and no Air.
+            const plain = entry.isQuickProduct;
+            return entry.pricingRows.map(pr => {
+                const isBase = !plain
+                    && (this.filteredTiers.find(t => t.quantity === pr.quantity)?.isBaseTier || false);
+                return {
+                    ...pr,
+                    isBaseTier: isBase,
+                    hasAir: plain ? false : [144, 288, 576, 1008].includes(pr.quantity),
+                    rowClass: isBase ? 'slds-hint-parent base-tier-row' : 'slds-hint-parent'
+                };
+            });
         }
         return null;
     }
@@ -93,9 +99,52 @@ export default class QuoteProductSelector extends NavigationMixin(LightningEleme
         return this.currentStep === STEP_ESTIMATOR;
     }
 
+    // North American Custom: SKU ends in MCCUST00. Costed like Quick Turn (LDP from
+    // FOB + decorations), priced cost-plus from the account base margin, never Air.
+    get isNaCustom() {
+        const code = (this.currentProduct?.ProductCode || '').trim().toUpperCase();
+        return code.endsWith(NA_CUSTOM_SUFFIX);
+    }
+
+    // List-driven Quick Turn: price from the Authenticated pricebook via the estimator.
+    // North American Custom may also carry a Quick special program, so it is excluded here.
     get isQuickProduct() {
         const sp = this.currentProduct?.Special_Program_SAP__c;
-        return sp && sp.toLowerCase().includes('quick');
+        return !!sp && sp.toLowerCase().includes('quick') && !this.isNaCustom;
+    }
+
+    // Either program: single lead time, no Air prices on the wizard or the PDF.
+    get isQuickLike() {
+        return this.isQuickProduct || this.isNaCustom;
+    }
+
+    get usesEstimator() {
+        // North American Custom needs a base style to cost from; without one the user
+        // enters LDP by hand on the pricing card.
+        return this.isQuickProduct || (this.isNaCustom && !!this.currentBaseStyleCode);
+    }
+
+    get currentTierCosts() {
+        const costs = this.currentEstimateData?.costs;
+        if (!costs?.available) return null;
+        const map = {};
+        costs.tiers.forEach(t => { map[t.quantity] = t.ldp; });
+        return map;
+    }
+
+    get tierQuantities() {
+        return this.filteredTiers.map(t => t.quantity);
+    }
+
+    // Smallest tier on this quote; the estimator shows its price instead of the list price.
+    get selectedMinTierQuantity() {
+        const quantities = this.tierQuantities;
+        return quantities.length ? Math.min(...quantities) : null;
+    }
+
+    // Per-tier merge of base-style schedule and Flow schedule, same precedence as the pricing card.
+    get currentEstimatorAdjustments() {
+        return { ...(this.scheduleAdjustments || {}), ...(this.currentBaseStyleScheduleAdjustments || {}) };
     }
 
     get isSimpleProduct() {
@@ -191,12 +240,20 @@ export default class QuoteProductSelector extends NavigationMixin(LightningEleme
         return this.currentOverride?.leadTime ?? '21 days';
     }
 
+    // The description saved from the last quote of this style (Product2.Quote_Description__c)
+    // is pre-filled; anything typed in this session takes precedence.
+    get savedDescription() {
+        return this.currentProduct?.Quote_Description__c || '';
+    }
+
     get showCustomDescription() {
-        return this.currentOverride?.showCustomDescription || false;
+        const toggled = this.currentOverride?.showCustomDescription;
+        return toggled != null ? toggled : !!this.savedDescription;
     }
 
     get currentCustomDescription() {
-        return this.currentOverride?.customDescription || '';
+        const typed = this.currentOverride?.customDescription;
+        return typed != null ? typed : this.savedDescription;
     }
 
     get currentOceanLeadTime() {
@@ -374,8 +431,10 @@ export default class QuoteProductSelector extends NavigationMixin(LightningEleme
     // --- Product Step Handlers ---
 
     async handleQuoteYes() {
-        if (this.isQuickProduct) {
+        if (this.usesEstimator) {
             this.currentEstimateData = null;
+            // Loaded first so the estimator can show the price at the selected minimum quantity.
+            await this.ensureBaseStylePricing();
             this.currentStep = STEP_ESTIMATOR;
             return;
         }
@@ -450,18 +509,25 @@ export default class QuoteProductSelector extends NavigationMixin(LightningEleme
                 ldp: this.currentProduct.LDP_SAP__c,
                 tierPrices: this.currentPricingData.tierPrices,
                 pricingRows: this.currentPricingData.pricingRows,
-                isQuickProduct: this.isQuickProduct,
-                leadTime: this.isQuickProduct ? this.currentLeadTime : '',
-                oceanLeadTime: this.isQuickProduct ? '' : this.currentOceanLeadTime,
-                airLeadTime: this.isQuickProduct ? '' : this.currentAirLeadTime,
+                // "Quick-like" covers Quick Turn and North American Custom: one lead time, no Air.
+                isQuickProduct: this.isQuickLike,
+                showAir: !this.isQuickLike,
+                leadTime: this.isQuickLike ? this.currentLeadTime : '',
+                oceanLeadTime: this.isQuickLike ? '' : this.currentOceanLeadTime,
+                airLeadTime: this.isQuickLike ? '' : this.currentAirLeadTime,
                 coo: this.currentOverride?.manufacturer?.coo || null,
-                customDescription: this.currentCustomDescription || null,
-                showMargin: !this.isQuickProduct
+                customDescription: this.showCustomDescription
+                    ? (this.currentCustomDescription || null)
+                    : null,
+                showMargin: true
             };
-            // Store estimator breakdown for quick products
-            if (this.isQuickProduct && this.currentEstimateData) {
-                entry.estimateBreakdown = this.currentEstimateData.breakdown;
-                entry.estimatedUnitPrice = this.currentEstimateData.estimatedUnitPrice;
+            // Keep the estimator result so the card can be rebuilt when the user comes back.
+            if (this.currentEstimateData) {
+                entry.estimateData = this.currentEstimateData;
+                if (this.currentEstimateData.estimatedUnitPrice) {
+                    entry.estimateBreakdown = this.currentEstimateData.breakdown;
+                    entry.estimatedUnitPrice = this.currentEstimateData.estimatedUnitPrice;
+                }
             }
             this.selectedProductsMap = {
                 ...this.selectedProductsMap,
@@ -488,11 +554,8 @@ export default class QuoteProductSelector extends NavigationMixin(LightningEleme
             if (productId && this.selectedProductsMap[productId]) {
                 // Restore estimate data for quick products so pricing card can use it
                 const entry = this.selectedProductsMap[productId];
-                if (entry.isQuickProduct && entry.estimatedUnitPrice) {
-                    this.currentEstimateData = {
-                        estimatedUnitPrice: entry.estimatedUnitPrice,
-                        breakdown: entry.estimateBreakdown
-                    };
+                if (entry.estimateData) {
+                    this.currentEstimateData = entry.estimateData;
                 }
                 this.showPricingForCurrent = true;
             }
@@ -515,11 +578,8 @@ export default class QuoteProductSelector extends NavigationMixin(LightningEleme
             if (productId && this.selectedProductsMap[productId]) {
                 // Restore estimate data for quick products
                 const entry = this.selectedProductsMap[productId];
-                if (entry.isQuickProduct && entry.estimatedUnitPrice) {
-                    this.currentEstimateData = {
-                        estimatedUnitPrice: entry.estimatedUnitPrice,
-                        breakdown: entry.estimateBreakdown
-                    };
+                if (entry.estimateData) {
+                    this.currentEstimateData = entry.estimateData;
                 }
                 this.showPricingForCurrent = true;
             }
@@ -566,6 +626,7 @@ export default class QuoteProductSelector extends NavigationMixin(LightningEleme
                     description: item.description,
                     ldp: item.ldp,
                     tierPrices: item.tierPrices,
+                    tierLdps: this.tierLdpsFor(item),
                     isQuickProduct: item.isQuickProduct || false,
                     oceanLeadtime: item.isQuickProduct
                         ? (item.leadTime || null)
@@ -605,6 +666,16 @@ export default class QuoteProductSelector extends NavigationMixin(LightningEleme
             this.errorMessage = this.reduceErrors(error);
             this.currentStep = STEP_SUMMARY;
         }
+    }
+
+    // { "144": ldp } for the cost snapshot stored on the quote line. Rows without a
+    // tier LDP (standard products) fall back to nothing; their LDP is on the product.
+    tierLdpsFor(item) {
+        const map = {};
+        (item.pricingRows || []).forEach(row => {
+            if (row.ldp != null && row.ldp > 0) map[String(row.quantity)] = row.ldp;
+        });
+        return Object.keys(map).length ? map : null;
     }
 
     async downloadQuotePdf(quoteId) {

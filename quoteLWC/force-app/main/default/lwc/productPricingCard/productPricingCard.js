@@ -25,6 +25,11 @@ export default class ProductPricingCard extends LightningElement {
     @api overrideBaseMargin;            // percent form (e.g. 35 for 35%) | undefined
     @api overrideManufacturerRates;     // { manufacturerId, name, x144, x288, x576, x1008 } | undefined
 
+    // Cost-driven inputs (Quick Turn and North American Custom).
+    @api tierCosts;          // { [quantity]: estimated LDP } from the cost service | null
+    @api costPlus = false;   // true: sell price = tier LDP / (1 - base margin) (North American Custom)
+    @api hideAir = false;    // true: never show or emit Air prices
+
     _pricingRows = [];
     _initialized = false;
 
@@ -68,7 +73,26 @@ export default class ProductPricingCard extends LightningElement {
         return this.product?.LDP_SAP__c || 0;
     }
 
+    get hasTierCosts() {
+        return !!this.tierCosts && Object.keys(this.tierCosts).length > 0;
+    }
+
+    // Quick Turn and cost-plus cards track an LDP per tier that the user can edit.
+    get usesTierLdp() {
+        return this.isQuickProduct || (this.costPlus && this.hasTierCosts);
+    }
+
     getLdpForQuantity(qty) {
+        if (this.usesTierLdp) {
+            // A row's own LDP (calculated, or edited by the user) wins once rows exist.
+            const row = this._pricingRows.find(r => r.quantity === qty);
+            if (row && row.ldp != null) return row.ldp;
+            const calculated = this.tierCosts ? Number(this.tierCosts[qty]) : NaN;
+            if (calculated > 0) return calculated;
+            // Cost-plus without a calculated cost falls back to the header LDP below.
+            // Quick Turn has no header LDP, so its margin stays blank until one is entered.
+            if (this.isQuickProduct) return 0;
+        }
         const tierField = { 144: 'LDP_144_SAP__c', 288: 'LDP_288_SAP__c', 432: 'LDP_432_SAP__c' };
         const field = tierField[qty];
         if (field && this.product?.[field]) return this.product[field];
@@ -115,11 +139,21 @@ export default class ProductPricingCard extends LightningElement {
     }
 
     get showMarginColumn() {
-        return !this.isQuickProduct;
+        // LDP and margin are visible to every rep on every product type.
+        return true;
+    }
+
+    get showLdpColumn() {
+        return this.usesTierLdp;
     }
 
     get showLdp() {
-        return !this.isQuickProduct;
+        // The single header LDP is replaced by the per-tier LDP column on cost-driven cards.
+        return !this.usesTierLdp;
+    }
+
+    get showCostNotice() {
+        return this.usesTierLdp && !this.hasTierCosts;
     }
 
     get showBaseMargin() {
@@ -130,7 +164,11 @@ export default class ProductPricingCard extends LightningElement {
     }
 
     get showSimpleManualNotice() {
-        return !this.isQuickProduct && !(this.ldp > 0 && this.baseMargin > 0);
+        return !this.isQuickProduct && !this.usesTierLdp && !(this.ldp > 0 && this.baseMargin > 0);
+    }
+
+    marginFor(ldp, price) {
+        return ldp > 0 && price > 0 ? this.round2((1 - (ldp / price)) * 100) : null;
     }
 
     renderedCallback() {
@@ -251,16 +289,44 @@ export default class ProductPricingCard extends LightningElement {
                     ? this.roundNickel(this.estimatedBasePrice)
                     : this.roundNickel(this.estimatedBasePrice - lookupAdj(qty));
                 const tierLdp = this.getLdpForQuantity(qty);
-                const margin = tierLdp > 0 ? this.round2((1 - (tierLdp / price)) * 100) : null;
+                const margin = this.marginFor(tierLdp, price);
 
                 return {
                     quantity: qty,
+                    ldp: tierLdp > 0 ? this.round4(tierLdp) : null,
                     // Quick products don't have a meaningful "base tier" row — 1008 is not visually special
                     // and 144 is only a mathematical anchor. Suppress the badge and highlight for every row.
                     isBaseTier: false,
                     hasAir: false,
                     oceanPrice: price,
                     oceanMargin: margin,
+                    airPrice: null,
+                    airMargin: null,
+                    rowClass: 'slds-hint-parent'
+                };
+            });
+
+            this.dispatchPricingChange();
+            return;
+        }
+
+        // Cost-plus mode (North American Custom): every tier is priced from its own
+        // estimated LDP at the account base margin. No base tier, no Air.
+        if (!this.isQuickProduct && this.costPlus && this.hasTierCosts) {
+            const margin = this.baseMargin;
+            this._pricingRows = this.tiers.map(tier => {
+                const qty = tier.quantity;
+                const tierLdp = this.getLdpForQuantity(qty);
+                const price = tierLdp > 0 && margin > 0 && margin < 1
+                    ? this.roundNickel(tierLdp / (1 - margin))
+                    : null;
+                return {
+                    quantity: qty,
+                    ldp: tierLdp > 0 ? this.round4(tierLdp) : null,
+                    isBaseTier: false,
+                    hasAir: false,
+                    oceanPrice: price,
+                    oceanMargin: this.marginFor(tierLdp, price),
                     airPrice: null,
                     airMargin: null,
                     rowClass: 'slds-hint-parent'
@@ -290,7 +356,7 @@ export default class ProductPricingCard extends LightningElement {
             const qty = tier.quantity;
             const isBase = tier.isBaseTier;
             const adj = tierAdjMap[qty];
-            const hasAir = AIR_TIERS.has(qty);
+            const hasAir = !this.hideAir && AIR_TIERS.has(qty);
             let oceanPrice = null;
             let oceanMargin = null;
             let airPrice = null;
@@ -365,6 +431,34 @@ export default class ProductPricingCard extends LightningElement {
             this.recalculateFromBase(newPrice);
         }
 
+        this._pricingRows = [...this._pricingRows];
+        this.dispatchPricingChange();
+    }
+
+    handleTierLdpChange(event) {
+        const quantity = parseFloat(event.target.dataset.quantity);
+        const newLdp = parseFloat(event.target.value);
+        if (isNaN(newLdp) || newLdp <= 0) return;
+
+        const rowIndex = this._pricingRows.findIndex(r => r.quantity === quantity);
+        if (rowIndex === -1) return;
+
+        const row = this._pricingRows[rowIndex];
+        const ldp = this.round4(newLdp);
+        let price = row.oceanPrice;
+        // Cost-plus re-prices the tier at the base margin; list-driven Quick Turn keeps
+        // its price and only the margin moves.
+        if (this.costPlus && !this.isQuickProduct) {
+            const margin = this.baseMargin;
+            if (margin > 0 && margin < 1) price = this.roundNickel(ldp / (1 - margin));
+        }
+
+        this._pricingRows[rowIndex] = {
+            ...row,
+            ldp,
+            oceanPrice: price,
+            oceanMargin: this.marginFor(ldp, price)
+        };
         this._pricingRows = [...this._pricingRows];
         this.dispatchPricingChange();
     }
@@ -466,7 +560,7 @@ export default class ProductPricingCard extends LightningElement {
             if (row.oceanPrice != null) {
                 tierPrices[row.quantity + '_Ocean'] = row.oceanPrice;
             }
-            if (row.airPrice != null) {
+            if (row.airPrice != null && !this.hideAir) {
                 tierPrices[row.quantity + '_Air'] = row.airPrice;
             }
         });
@@ -476,6 +570,7 @@ export default class ProductPricingCard extends LightningElement {
                 productId: this.product.Id,
                 pricingRows: this._pricingRows.map(row => ({
                     quantity: row.quantity,
+                    ldp: row.ldp != null ? row.ldp : null,
                     oceanPrice: row.oceanPrice,
                     oceanMargin: row.oceanMargin,
                     airPrice: row.airPrice,
@@ -493,7 +588,7 @@ export default class ProductPricingCard extends LightningElement {
             if (row.oceanPrice != null) {
                 tierPrices[row.quantity + '_Ocean'] = row.oceanPrice;
             }
-            if (row.airPrice != null) {
+            if (row.airPrice != null && !this.hideAir) {
                 tierPrices[row.quantity + '_Air'] = row.airPrice;
             }
         });
@@ -507,6 +602,7 @@ export default class ProductPricingCard extends LightningElement {
             tierPrices: tierPrices,
             pricingRows: this._pricingRows.map(row => ({
                 quantity: row.quantity,
+                ldp: row.ldp != null ? row.ldp : null,
                 oceanPrice: row.oceanPrice,
                 oceanMargin: row.oceanMargin,
                 airPrice: row.airPrice,
@@ -517,6 +613,10 @@ export default class ProductPricingCard extends LightningElement {
 
     roundNickel(val) {
         return Math.ceil(val * 20) / 20;
+    }
+
+    round4(val) {
+        return Math.round(val * 10000) / 10000;
     }
 
     round2(val) {

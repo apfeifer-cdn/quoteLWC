@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Additional_Location_Cost__c</fullName>
+    <description>Standard factory cost of this decoration when added as a second or later location. When blank, the main location cost is used.</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Standard factory cost of this decoration when added as a second or later location. When blank, the main location cost is used.</inlineHelpText>
+    <label>Decoration Cost (Additional Location)</label>
+    <precision>10</precision>
+    <required>false</required>
+    <scale>4</scale>
+    <trackTrending>false</trackTrending>
+    <type>Currency</type>
+</CustomField>

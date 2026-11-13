@@ -103,14 +103,14 @@
                 </template>
 
                 <!-- Estimate Breakdown -->
-                <template if:true={hasEstimate}>
+                <template if:true={showPriceBreakdown}>
                     <div class="slds-box slds-m-bottom_medium slds-theme_shade">
                         <h3 class="slds-text-heading_small slds-m-bottom_small">Estimate Breakdown</h3>
                         <table class="slds-table slds-table_cell-buffer slds-table_bordered">
                             <thead>
                                 <tr class="slds-line-height_reset">
                                     <th class="slds-text-title_caps" scope="col">Item</th>
-                                    <th class="slds-text-title_caps" scope="col">Unit Price</th>
+                                    <th class="slds-text-title_caps" scope="col">List Unit Price</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -130,11 +130,25 @@
                                 </template>
                             </tbody>
                             <tfoot>
+                                <template if:true={hasQuantityAdjustment}>
+                                    <tr>
+                                        <td>{quantityAdjustmentLabel}</td>
+                                        <td>
+                                            <lightning-formatted-number
+                                                value={quantityAdjustmentDisplay}
+                                                format-style="currency"
+                                                currency-code="USD"
+                                                minimum-fraction-digits="2"
+                                                maximum-fraction-digits="4">
+                                            </lightning-formatted-number>
+                                        </td>
+                                    </tr>
+                                </template>
                                 <tr class="slds-text-title_bold">
-                                    <td>Total Estimated Unit Price</td>
+                                    <td>{priceAtQuantityLabel}</td>
                                     <td>
                                         <lightning-formatted-number
-                                            value={estimateTotalPrice}
+                                            value={priceAtQuantity}
                                             format-style="currency"
                                             currency-code="USD"
                                             minimum-fraction-digits="2"
@@ -142,6 +156,87 @@
                                         </lightning-formatted-number>
                                     </td>
                                 </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </template>
+
+                <!-- Estimated cost (internal; never printed on the quote PDF) -->
+                <template if:true={costMessage}>
+                    <div class="slds-scoped-notification slds-media slds-media_center slds-scoped-notification_light slds-m-bottom_medium" role="status">
+                        <div class="slds-media__body">
+                            <p>{costMessage}</p>
+                        </div>
+                    </div>
+                </template>
+                <template if:true={hasCost}>
+                    <div class="slds-box slds-m-bottom_medium">
+                        <h3 class="slds-text-heading_small slds-m-bottom_small">{costHeading}</h3>
+                        <template for:each={costWarnings} for:item="warning">
+                            <p key={warning.key} class="slds-text-color_error slds-m-bottom_xx-small">{warning.text}</p>
+                        </template>
+                        <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                            <thead>
+                                <tr class="slds-line-height_reset">
+                                    <th class="slds-text-title_caps" scope="col">Item</th>
+                                    <th class="slds-text-title_caps" scope="col">Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={costLines} for:item="line">
+                                    <tr key={line.key}>
+                                        <td>{line.label}</td>
+                                        <td>
+                                            <lightning-formatted-number value={line.cost} format-style="currency" currency-code="USD" minimum-fraction-digits="2" maximum-fraction-digits="4"></lightning-formatted-number>
+                                        </td>
+                                    </tr>
+                                </template>
+                                <tr>
+                                    <td>FOB</td>
+                                    <td>
+                                        <lightning-formatted-number value={baseFob} format-style="currency" currency-code="USD" minimum-fraction-digits="2" maximum-fraction-digits="4"></lightning-formatted-number>
+                                    </td>
+                                </tr>
+                                <template if:true={hasUpcharge}>
+                                    <tr>
+                                        <td>{upchargeLabel}</td>
+                                        <td>
+                                            <lightning-formatted-number value={upchargeAmount} format-style="currency" currency-code="USD" minimum-fraction-digits="2" maximum-fraction-digits="4"></lightning-formatted-number>
+                                        </td>
+                                    </tr>
+                                </template>
+                                <template if:true={costTier}>
+                                    <tr>
+                                        <td>Duty, insurance, finance, freight and fees</td>
+                                        <td>
+                                            <lightning-formatted-number value={landedCharges} format-style="currency" currency-code="USD" minimum-fraction-digits="2" maximum-fraction-digits="4"></lightning-formatted-number>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                            <tfoot>
+                                <tr class="slds-text-title_bold">
+                                    <td>Estimated LDP</td>
+                                    <td>
+                                        <lightning-formatted-number value={ldpAtQuantity} format-style="currency" currency-code="USD" minimum-fraction-digits="2" maximum-fraction-digits="4"></lightning-formatted-number>
+                                    </td>
+                                </tr>
+                                <template if:true={showCostPlusPrice}>
+                                    <tr>
+                                        <td>Sell price at base margin</td>
+                                        <td>
+                                            <lightning-formatted-number value={sellPriceAtQuantity} format-style="currency" currency-code="USD" minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number>
+                                        </td>
+                                    </tr>
+                                </template>
+                                <template if:true={hasMargin}>
+                                    <tr class="slds-text-title_bold">
+                                        <td>Estimated GM%</td>
+                                        <td>
+                                            <lightning-formatted-number value={marginAtQuantity} format-style="percent" minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number>
+                                        </td>
+                                    </tr>
+                                </template>
                             </tfoot>
                         </table>
                     </div>
@@ -156,6 +251,25 @@
                         disabled={isConfirmDisabled}
                         class="slds-m-right_small">
                     </lightning-button>
+                    <lightning-button
+                        label="Cancel"
+                        variant="neutral"
+                        onclick={handleCancel}>
+                    </lightning-button>
+                </div>
+            </template>
+
+            <!-- No base style matched: let the user leave this screen -->
+            <template if:true={showNoEstimatorActions}>
+                <div class="slds-text-align_center slds-m-top_medium">
+                    <template if:true={canContinueWithoutEstimator}>
+                        <lightning-button
+                            label="Continue and Enter LDP Manually"
+                            variant="brand"
+                            onclick={handleContinueWithoutEstimator}
+                            class="slds-m-right_small">
+                        </lightning-button>
+                    </template>
                     <lightning-button
                         label="Cancel"
                         variant="neutral"

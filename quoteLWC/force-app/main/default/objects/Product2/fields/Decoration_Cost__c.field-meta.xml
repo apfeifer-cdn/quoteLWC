@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Decoration_Cost__c</fullName>
+    <description>Standard factory cost of this decoration when it is the main decoration. Used by the quote tool to estimate LDP.</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Standard factory cost of this decoration when it is the main decoration. Used by the quote tool to estimate LDP.</inlineHelpText>
+    <label>Decoration Cost (Main Location)</label>
+    <precision>10</precision>
+    <required>false</required>
+    <scale>4</scale>
+    <trackTrending>false</trackTrending>
+    <type>Currency</type>
+</CustomField>

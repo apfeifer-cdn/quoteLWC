@@ -59,16 +59,15 @@
                                 <tr class="slds-line-height_reset">
                                     <th class="slds-text-title_caps" scope="col">Quantity</th>
                                     <th class="slds-text-title_caps" scope="col">
-                                        <template if:true={product.showMargin}>Ocean Price</template>
-                                        <template if:false={product.showMargin}>Price</template>
+                                        <template if:true={product.showAir}>Ocean Price</template>
+                                        <template if:false={product.showAir}>Price</template>
                                     </th>
-                                    <template if:true={product.showMargin}>
-                                        <th class="slds-text-title_caps" scope="col">Ocean Margin</th>
-                                    </template>
-                                    <template if:false={product.isQuickProduct}>
+                                    <th class="slds-text-title_caps" scope="col">
+                                        <template if:true={product.showAir}>Ocean Margin</template>
+                                        <template if:false={product.showAir}>Margin</template>
+                                    </th>
+                                    <template if:true={product.showAir}>
                                         <th class="slds-text-title_caps" scope="col">Air Price</th>
-                                    </template>
-                                    <template if:true={product.showMargin}>
                                         <th class="slds-text-title_caps" scope="col">Air Margin</th>
                                     </template>
                                 </tr>
@@ -96,8 +95,7 @@
                                                 <span class="slds-text-color_weak">&mdash;</span>
                                             </template>
                                         </td>
-                                        <template if:true={product.showMargin}>
-                                            <td>
+                                        <td>
                                                 <template if:true={tier.oceanMargin}>
                                                     <lightning-formatted-number
                                                         value={tier.oceanMarginDecimal}
@@ -109,8 +107,7 @@
                                                     <span class="slds-text-color_weak">&mdash;</span>
                                                 </template>
                                             </td>
-                                        </template>
-                                        <template if:false={product.isQuickProduct}>
+                                        <template if:true={product.showAir}>
                                             <td>
                                                 <template if:true={tier.airPrice}>
                                                     <lightning-formatted-number
@@ -126,7 +123,7 @@
                                                 </template>
                                             </td>
                                         </template>
-                                        <template if:true={product.showMargin}>
+                                        <template if:true={product.showAir}>
                                             <td>
                                                 <template if:true={tier.airMargin}>
                                                     <lightning-formatted-number

@@ -29,6 +29,8 @@ public with sharing class QuoteProductController {
         @AuraEnabled public Boolean isQuickProduct;
         @AuraEnabled public String customDescription;
         @AuraEnabled public Map<String, Decimal> tierPrices;
+        // Estimated LDP per quantity tier, keyed by quantity ("144"). Internal only.
+        @AuraEnabled public Map<String, Decimal> tierLdps;
     }
 
     public class QuoteRequest {
@@ -39,7 +41,9 @@ public with sharing class QuoteProductController {
         @AuraEnabled public List<QuoteLineItemData> lineItems;
     }
 
-    @AuraEnabled(cacheable=true)
+    // Not cacheable: Quote_Description__c is written when a quote is created and the
+    // next quote must read the saved value, not a client-side cached copy.
+    @AuraEnabled
     public static List<Product2> getProducts(String opportunityId) {
         Set<Id> productIds = new Set<Id>();
 
@@ -50,7 +54,7 @@ public with sharing class QuoteProductController {
         }
 
         List<Product2> allProducts = [
-            SELECT Id, Name, ProductCode, Description, ProductClass,
+            SELECT Id, Name, ProductCode, Description, ProductClass, Quote_Description__c,
                    LDP_SAP__c, LDP_144_SAP__c, LDP_288_SAP__c, LDP_432_SAP__c,
                    Opportunity_ID_SAP__c,
                    Special_Program_SAP__c, CDN_Style_ID_SAP__c,
@@ -359,6 +363,37 @@ public with sharing class QuoteProductController {
     }
 
     /**
+     * Estimated LDP per quantity tier for a base style with the chosen decorations,
+     * using the manufacturer's charges and small-quantity upcharges. Returns
+     * available = false with a message when cost data is missing; it does not throw
+     * for missing data so the wizard can continue without a cost.
+     *
+     * Exposed here rather than on QuoteCostService so users need access to only
+     * one Apex class.
+     */
+    @AuraEnabled
+    public static QuoteCostService.CostResult getQuickTurnCosts(Id estimatorProductId, Id mainDecorationId,
+            List<String> additionalDecorationIds, Id manufacturerId, List<Decimal> quantities) {
+        try {
+            // Quantities arrive from Lightning as decimals; convert before use.
+            List<Integer> wholeQuantities = new List<Integer>();
+            for (Decimal quantity : quantities == null ? new List<Decimal>() : quantities) {
+                if (quantity != null) {
+                    wholeQuantities.add(quantity.intValue());
+                }
+            }
+            return QuoteCostService.calculate(estimatorProductId, mainDecorationId,
+                additionalDecorationIds, manufacturerId, wholeQuantities);
+        } catch (Exception e) {
+            System.debug(LoggingLevel.ERROR, 'getQuickTurnCosts failed: ' + e.getMessage()
+                + ' ' + e.getStackTraceString());
+            QuoteCostService.CostResult failed = new QuoteCostService.CostResult();
+            failed.message = 'LDP could not be estimated. Ask an administrator to check the cost data.';
+            return failed;
+        }
+    }
+
+    /**
      * Get all PriceAdjustmentTier values for a schedule matching the name pattern.
      * Returns a map of LowerBound → TierValue (dollar adjustments per tier).
      * Returns null if no matching schedule or input is blank.
@@ -611,6 +646,16 @@ public with sharing class QuoteProductController {
             productIds.add(item.productId);
         }
 
+        // Keyed by the 18-character Id string the client sends.
+        Map<String, Product2> quotedProducts = new Map<String, Product2>();
+        for (Product2 p : [
+            SELECT Id, ProductCode, Special_Program_SAP__c, Quote_Description__c
+            FROM Product2
+            WHERE Id IN :productIds
+        ]) {
+            quotedProducts.put(String.valueOf(p.Id), p);
+        }
+
         Map<String, Id> productToPbeId = new Map<String, Id>();
         for (PricebookEntry pbe : [
             SELECT Id, Product2Id
@@ -649,14 +694,32 @@ public with sharing class QuoteProductController {
                 qli.Custom_Description__c = item.customDescription;
             }
 
+            // Quick Turn and North American Custom lines never carry air pricing,
+            // whatever the client sent.
+            Product2 quoted = quotedProducts.get(item.productId);
+            Boolean allowAir = quoted == null
+                || !(QuoteCostService.isQuickProgram(quoted.Special_Program_SAP__c)
+                     || QuoteCostService.isNorthAmericanCustom(quoted.ProductCode));
+
+            String snapshot = buildCostSnapshot(item);
+            if (snapshot != null) {
+                qli.Cost_Snapshot__c = snapshot;
+            }
+
             // Set tier prices from the map (keys like "1008_Ocean", "1008_Air")
             if (item.tierPrices != null) {
                 for (String key : item.tierPrices.keySet()) {
                     Decimal price = item.tierPrices.get(key);
                     String[] parts = key.split('_');
                     if (parts.size() >= 2) {
+                        if (!parts[0].isNumeric()) {
+                            continue;
+                        }
                         Integer qty = Integer.valueOf(parts[0]);
                         String shippingType = parts[1];
+                        if (shippingType == 'Air' && !allowAir) {
+                            continue;
+                        }
 
                         String fieldName;
                         if (shippingType == 'Ocean') {
@@ -679,10 +742,72 @@ public with sharing class QuoteProductController {
             insert qlis;
         }
 
+        saveQuoteDescriptions(request.lineItems, quotedProducts);
+
         // Generate PDF asynchronously to avoid DML-before-callout restriction
         generateQuotePDFAsync(newQuote.Id);
 
         return newQuote.Id;
+    }
+
+    /**
+     * JSON snapshot of LDP, sell price and margin per tier for one line:
+     * {"144":{"ldp":5.1234,"price":12.75,"marginPct":59.82}}. Returns null when the
+     * client sent no LDPs. Stored for audit; never read by the quote PDF.
+     */
+    @TestVisible
+    private static String buildCostSnapshot(QuoteLineItemData item) {
+        if (item.tierLdps == null || item.tierLdps.isEmpty()) {
+            return null;
+        }
+        Map<String, Object> snapshot = new Map<String, Object>();
+        for (String qtyKey : item.tierLdps.keySet()) {
+            Decimal ldp = item.tierLdps.get(qtyKey);
+            if (ldp == null || !qtyKey.isNumeric()) {
+                continue;
+            }
+            Map<String, Object> tier = new Map<String, Object>{ 'ldp' => ldp };
+            Decimal price = item.tierPrices == null ? null : item.tierPrices.get(qtyKey + '_Ocean');
+            if (price != null && price > 0) {
+                tier.put('price', price);
+                tier.put('marginPct', ((1 - ldp / price) * 100).setScale(2, RoundingMode.HALF_UP));
+            }
+            snapshot.put(qtyKey, tier);
+        }
+        if (snapshot.isEmpty()) {
+            return null;
+        }
+        String serialized = JSON.serialize(snapshot);
+        return serialized.length() > 10000 ? null : serialized;
+    }
+
+    /**
+     * Save each line's custom description to Product2.Quote_Description__c so the next
+     * quote for the style starts with it. A failure here is logged and does not fail
+     * the quote, which is already inserted.
+     */
+    private static void saveQuoteDescriptions(List<QuoteLineItemData> items, Map<String, Product2> quotedProducts) {
+        Map<Id, Product2> updates = new Map<Id, Product2>();
+        for (QuoteLineItemData item : items) {
+            if (String.isBlank(item.customDescription) || String.isBlank(item.productId)) {
+                continue;
+            }
+            Product2 existing = quotedProducts.get(item.productId);
+            String description = item.customDescription.left(5000);
+            if (existing == null || existing.Quote_Description__c == description) {
+                continue;
+            }
+            updates.put(existing.Id, new Product2(Id = existing.Id, Quote_Description__c = description));
+        }
+        if (updates.isEmpty()) {
+            return;
+        }
+        for (Database.SaveResult sr : Database.update(updates.values(), false)) {
+            if (!sr.isSuccess()) {
+                System.debug(LoggingLevel.ERROR, 'Quote description not saved for Product2 '
+                    + sr.getId() + ': ' + sr.getErrors());
+            }
+        }
     }
 
     // Synchronous PDF fetch for immediate client-side download after quote creation.

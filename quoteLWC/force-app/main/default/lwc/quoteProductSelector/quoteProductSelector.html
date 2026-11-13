@@ -139,7 +139,7 @@
                             </div>
                         </div>
 
-                        <template if:true={isQuickProduct}>
+                        <template if:true={isQuickLike}>
                             <div class="slds-grid slds-wrap slds-gutters_small slds-m-bottom_medium">
                                 <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
                                     <lightning-input
@@ -151,7 +151,7 @@
                                 </div>
                             </div>
                         </template>
-                        <template if:false={isQuickProduct}>
+                        <template if:false={isQuickLike}>
                             <div class="slds-grid slds-wrap slds-gutters_small slds-m-bottom_medium">
                                 <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
                                     <lightning-input
@@ -229,6 +229,9 @@
                     override-ldp={currentLdp}
                     override-base-margin={currentBaseMarginPercent}
                     override-manufacturer-rates={currentManufacturerRates}
+                    tier-costs={currentTierCosts}
+                    cost-plus={isNaCustom}
+                    hide-air={isQuickLike}
                     onpricingchange={handlePricingChange}>
                 </c-product-pricing-card>
 
@@ -289,6 +292,13 @@
 
             <c-quote-estimator
                 product={currentProduct}
+                min-quantity={selectedMinTierQuantity}
+                anchor-quantity={currentBaseStyleAnchorQuantity}
+                schedule-adjustments={currentEstimatorAdjustments}
+                manufacturer-id={currentManufacturerId}
+                quantities={tierQuantities}
+                cost-only={isNaCustom}
+                base-margin-percent={currentBaseMarginPercent}
                 onestimatecomplete={handleEstimateComplete}
                 oncancel={handleCancelEstimator}>
             </c-quote-estimator>

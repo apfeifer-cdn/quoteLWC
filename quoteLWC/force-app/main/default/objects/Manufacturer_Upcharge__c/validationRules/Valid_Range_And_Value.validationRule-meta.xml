@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Valid_Range_And_Value</fullName>
+    <active>true</active>
+    <description>Bounds must be positive and ordered, a multiplier must be greater than zero, and a dollar upcharge cannot be negative.</description>
+    <errorConditionFormula>OR(
+  Quantity_Lower_Bound__c &lt; 1,
+  AND(NOT(ISBLANK(Quantity_Upper_Bound__c)), Quantity_Upper_Bound__c &lt; Quantity_Lower_Bound__c),
+  AND(ISPICKVAL(Upcharge_Type__c, &quot;Multiplier&quot;), Value__c &lt;= 0),
+  AND(ISPICKVAL(Upcharge_Type__c, &quot;Dollar&quot;), Value__c &lt; 0)
+)</errorConditionFormula>
+    <errorMessage>Check the quantity range and value: the lower bound must be at least 1, the upper bound cannot be below the lower bound, a multiplier must be greater than 0 and a dollar amount cannot be negative.</errorMessage>
+</ValidationRule>

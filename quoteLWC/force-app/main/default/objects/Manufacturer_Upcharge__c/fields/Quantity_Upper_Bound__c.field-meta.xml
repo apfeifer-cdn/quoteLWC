@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Quantity_Upper_Bound__c</fullName>
+    <description>Largest order quantity this upcharge applies to. Leave blank for no upper limit.</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Largest order quantity this upcharge applies to. Leave blank for no upper limit.</inlineHelpText>
+    <label>Quantity Upper Bound</label>
+    <precision>7</precision>
+    <required>false</required>
+    <scale>0</scale>
+    <trackHistory>true</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>

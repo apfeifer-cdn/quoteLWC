@@ -734,4 +734,71 @@ private class QuoteProductControllerTest {
         System.assertEquals(0.30, result.x576);
         System.assertEquals(0.20, result.x1008);
     }
+
+    @IsTest
+    static void testCreateQuoteSavesCostSnapshotAndDescription() {
+        Id stdPricebookId = Test.getStandardPricebookId();
+
+        Account oppAccount = new Account(Name = 'Test Opp Account NA Custom');
+        insert oppAccount;
+
+        Opportunity opp = new Opportunity(
+            Name = 'Test Opportunity NA Custom',
+            StageName = 'Prospecting',
+            CloseDate = Date.today().addDays(30),
+            AccountId = oppAccount.Id,
+            Pricebook2Id = stdPricebookId
+        );
+        insert opp;
+
+        // SKU ending in MCCUST00 marks a North American Custom product.
+        Product2 prod = buildProduct('NA Custom Cap', 'ABC-MCCUST00', 'Simple', 4.00, 'TEST-OPP-NAC', null, null);
+        insert prod;
+        ensurePricebookEntry(stdPricebookId, prod.Id, 10.00);
+
+        QuoteProductController.QuoteLineItemData lineItem = new QuoteProductController.QuoteLineItemData();
+        lineItem.productId = prod.Id;
+        lineItem.ldp = 4.00;
+        lineItem.customDescription = 'Navy crown, white rope';
+        lineItem.tierPrices = new Map<String, Decimal>{
+            '144_Ocean' => 10.00,
+            '144_Air' => 12.00,
+            'bad_Ocean' => 1.00
+        };
+        lineItem.tierLdps = new Map<String, Decimal>{ '144' => 6.00, '288' => 5.50, 'bad' => 1.00 };
+
+        QuoteProductController.QuoteRequest request = new QuoteProductController.QuoteRequest();
+        request.opportunityId = opp.Id;
+        request.lineItems = new List<QuoteProductController.QuoteLineItemData>{ lineItem };
+
+        Test.startTest();
+        String quoteId = QuoteProductController.createQuoteWithLineItems(JSON.serialize(request));
+        Test.stopTest();
+
+        QuoteLineItem qli = [SELECT Cost_Snapshot__c FROM QuoteLineItem WHERE QuoteId = :quoteId LIMIT 1];
+        System.assertNotEquals(null, qli.Cost_Snapshot__c, 'Cost snapshot should be stored');
+        Map<String, Object> snapshot = (Map<String, Object>) JSON.deserializeUntyped(qli.Cost_Snapshot__c);
+        System.assertEquals(2, snapshot.size(), 'Non-numeric tier keys are dropped');
+        Map<String, Object> tier144 = (Map<String, Object>) snapshot.get('144');
+        System.assertEquals(6.00, (Decimal) tier144.get('ldp'));
+        System.assertEquals(40.00, (Decimal) tier144.get('marginPct'), '1 - 6/10 = 40%');
+        Map<String, Object> tier288 = (Map<String, Object>) snapshot.get('288');
+        System.assertEquals(false, tier288.containsKey('price'), 'No price was sent for 288');
+
+        Product2 saved = [SELECT Quote_Description__c FROM Product2 WHERE Id = :prod.Id];
+        System.assertEquals('Navy crown, white rope', saved.Quote_Description__c,
+            'Custom description should be saved to the product for the next quote');
+
+        List<Product2> reloaded = QuoteProductController.getProducts('TEST-OPP-NAC');
+        System.assertEquals(1, reloaded.size());
+        System.assertEquals('Navy crown, white rope', reloaded[0].Quote_Description__c);
+    }
+
+    @IsTest
+    static void testBuildCostSnapshotWithoutLdps() {
+        QuoteProductController.QuoteLineItemData lineItem = new QuoteProductController.QuoteLineItemData();
+        System.assertEquals(null, QuoteProductController.buildCostSnapshot(lineItem));
+        lineItem.tierLdps = new Map<String, Decimal>{ '144' => null };
+        System.assertEquals(null, QuoteProductController.buildCostSnapshot(lineItem));
+    }
 }

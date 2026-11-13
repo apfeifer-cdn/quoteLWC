@@ -119,11 +119,22 @@
                 </div>
             </template>
 
+            <template if:true={showCostNotice}>
+                <div class="slds-scoped-notification slds-media slds-media_center slds-scoped-notification_light slds-m-bottom_small" role="status">
+                    <div class="slds-media__body">
+                        <p>No estimated LDP is available for this product. Enter an LDP per tier to see margin.</p>
+                    </div>
+                </div>
+            </template>
+
             <!-- Pricing Table -->
             <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped">
                 <thead>
                     <tr class="slds-line-height_reset">
                         <th class="slds-text-title_caps" scope="col">Quantity</th>
+                        <template if:true={showLdpColumn}>
+                            <th class="slds-text-title_caps" scope="col">Est. LDP</th>
+                        </template>
                         <th class="slds-text-title_caps" scope="col">{priceColumnLabel}</th>
                         <template if:true={showMarginColumn}>
                             <th class="slds-text-title_caps" scope="col">{marginColumnLabel}</th>
@@ -148,6 +159,20 @@
                                     </template>
                                 </div>
                             </td>
+                            <template if:true={showLdpColumn}>
+                                <td data-label="Estimated LDP">
+                                    <lightning-input
+                                        type="number"
+                                        formatter="currency"
+                                        step="0.0001"
+                                        value={row.ldp}
+                                        data-quantity={row.quantity}
+                                        onchange={handleTierLdpChange}
+                                        variant="label-hidden"
+                                        class="price-input">
+                                    </lightning-input>
+                                </td>
+                            </template>
                             <td data-label="Ocean Price">
                                 <lightning-input
                                     type="number"

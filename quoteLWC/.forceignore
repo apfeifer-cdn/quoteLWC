@@ -1,0 +1,22 @@
+# Retrieved for reference only. Deploying a partially retrieved profile can
+# strip permissions that are not listed in the file, so it is never deployed.
+**/profiles/**
+
+# Standard QuoteLineItem fields retrieved from the org; nothing to deploy.
+**/objects/QuoteLineItem/fields/Description.field-meta.xml
+**/objects/QuoteLineItem/fields/Discount.field-meta.xml
+**/objects/QuoteLineItem/fields/ListPrice.field-meta.xml
+**/objects/QuoteLineItem/fields/Product2Id.field-meta.xml
+**/objects/QuoteLineItem/fields/ProductCode.field-meta.xml
+**/objects/QuoteLineItem/fields/Quantity.field-meta.xml
+**/objects/QuoteLineItem/fields/QuoteId.field-meta.xml
+**/objects/QuoteLineItem/fields/ServiceDate.field-meta.xml
+**/objects/QuoteLineItem/fields/SortOrder.field-meta.xml
+**/objects/QuoteLineItem/fields/Subtotal.field-meta.xml
+**/objects/QuoteLineItem/fields/TotalPrice.field-meta.xml
+**/objects/QuoteLineItem/fields/UnitPrice.field-meta.xml
+
+**/jsconfig.json
+**/.eslintrc.json
+**/__tests__/**
+package.xml
