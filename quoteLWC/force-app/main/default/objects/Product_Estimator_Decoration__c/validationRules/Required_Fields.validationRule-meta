@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Required_Fields</fullName>
+    <active>true</active>
+    <description>Lookup fields to Product and Pricebook cannot be made required in field config.</description>
+    <errorConditionFormula>OR(
+  ISNULL(Decoration__c),
+  ISNULL(Product__c),
+  ISNULL(Price_Book__c)
+)</errorConditionFormula>
+    <errorMessage>Please set values for Price Book, Product, and Decoration.</errorMessage>
+</ValidationRule>

@@ -1,0 +1,7 @@
+.product-summary-card {
+    border-left: 4px solid var(--slds-g-color-brand-base-50, #0176d3);
+}
+
+:host {
+    display: block;
+}

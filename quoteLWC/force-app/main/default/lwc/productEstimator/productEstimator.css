@@ -1,0 +1,25 @@
+.number-input__input {
+    width: 5.5rem;
+    min-height: 2.5rem;
+    outline: 0;
+    text-align: center;
+    display: inline-block;
+    vertical-align: top;
+}
+.display-inline {
+    display: inline-block;
+}
+.shipping-message {
+    width: auto;
+    padding: 0.3em;
+}
+table.estimate-output {
+    width: 100%;
+    margin-bottom: 1em;
+}
+table.estimate-output .summary-row td {
+    border-top: 1px solid black;
+}
+table.estimate-output .grand-total {
+    font-weight: bold;
+}

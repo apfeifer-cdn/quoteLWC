@@ -1,0 +1,168 @@
+<template>
+    <!-- Loading Spinner -->
+    <template if:true={isLoading}>
+        <div class="slds-align_absolute-center slds-p-around_medium">
+            <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+        </div>
+    </template>
+
+    <!-- Error Alert -->
+    <template if:true={errorMessage}>
+        <div class="slds-notify slds-notify_alert slds-alert_error slds-m-around_small" role="alert">
+            <p>{errorMessage}</p>
+        </div>
+    </template>
+
+    <!-- Estimator Card -->
+    <lightning-card title="Configure Decoration" icon-name="standard:product_required">
+        <div class="slds-p-around_medium">
+
+            <!-- Product Info Header -->
+            <div class="slds-grid slds-gutters_small slds-m-bottom_medium">
+                <template if:true={productImageUrl}>
+                    <div class="slds-col slds-shrink-none">
+                        <div class="product-image-container">
+                            <img src={productImageUrl} alt={productName} class="product-image" />
+                        </div>
+                    </div>
+                </template>
+                <div class="slds-col slds-grow">
+                    <div class="slds-grid slds-wrap slds-gutters_small">
+                        <div class="slds-col slds-size_1-of-2">
+                            <div class="slds-form-element">
+                                <span class="slds-form-element__label">Product</span>
+                                <div class="slds-form-element__static slds-text-title_bold">{productName}</div>
+                            </div>
+                        </div>
+                        <template if:true={hasEstimatorProduct}>
+                            <div class="slds-col slds-size_1-of-2">
+                                <div class="slds-form-element">
+                                    <span class="slds-form-element__label">Matched Base Style</span>
+                                    <div class="slds-form-element__static">{cdnStyleId}</div>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2">
+                                <div class="slds-form-element">
+                                    <span class="slds-form-element__label">Style Number</span>
+                                    <div class="slds-form-element__static">{productCode}</div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <template if:true={hasEstimatorProduct}>
+                <!-- Decoration Selection -->
+                <div class="slds-grid slds-wrap slds-gutters_small slds-m-bottom_medium">
+                    <!-- Main Decoration -->
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_small">
+                        <lightning-combobox
+                            label="Main Decoration"
+                            placeholder="Select a decoration..."
+                            options={mainDecorationOptions}
+                            value={selectedMainDecoration}
+                            onchange={handleMainDecorationChange}
+                            required>
+                        </lightning-combobox>
+                    </div>
+
+                    <!-- Additional Decorations -->
+                    <template if:true={hasAdditionalDecorationOptions}>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_small">
+                            <lightning-combobox
+                                data-id="addl-decoration-combo"
+                                label="Add Additional Decoration"
+                                placeholder="Select to add..."
+                                options={additionalDecorationOptions}
+                                onchange={handleAdditionalDecorationChange}>
+                            </lightning-combobox>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Selected Additional Decorations (Pills) -->
+                <template if:true={hasSelectedAdditionalDecorations}>
+                    <div class="slds-m-bottom_medium">
+                        <span class="slds-form-element__label slds-m-bottom_xx-small">Additional Decorations</span>
+                        <div class="slds-pill_container">
+                            <template for:each={selectedAdditionalDecorations} for:item="dec">
+                                <span key={dec.key} class="slds-pill slds-m-right_xx-small slds-m-bottom_xx-small">
+                                    <span class="slds-pill__label">{dec.name}</span>
+                                    <button
+                                        class="slds-button slds-button_icon slds-button_icon-bare slds-pill__remove"
+                                        title="Remove"
+                                        data-key={dec.key}
+                                        onclick={handleRemoveDecoration}>
+                                        <lightning-icon icon-name="utility:close" size="xx-small" alternative-text="Remove"></lightning-icon>
+                                    </button>
+                                </span>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Estimate Breakdown -->
+                <template if:true={hasEstimate}>
+                    <div class="slds-box slds-m-bottom_medium slds-theme_shade">
+                        <h3 class="slds-text-heading_small slds-m-bottom_small">Estimate Breakdown</h3>
+                        <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                            <thead>
+                                <tr class="slds-line-height_reset">
+                                    <th class="slds-text-title_caps" scope="col">Item</th>
+                                    <th class="slds-text-title_caps" scope="col">Unit Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={estimateItems} for:item="item">
+                                    <tr key={item.key}>
+                                        <td>{item.label}</td>
+                                        <td>
+                                            <lightning-formatted-number
+                                                value={item.price}
+                                                format-style="currency"
+                                                currency-code="USD"
+                                                minimum-fraction-digits="2"
+                                                maximum-fraction-digits="4">
+                                            </lightning-formatted-number>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                            <tfoot>
+                                <tr class="slds-text-title_bold">
+                                    <td>Total Estimated Unit Price</td>
+                                    <td>
+                                        <lightning-formatted-number
+                                            value={estimateTotalPrice}
+                                            format-style="currency"
+                                            currency-code="USD"
+                                            minimum-fraction-digits="2"
+                                            maximum-fraction-digits="4">
+                                        </lightning-formatted-number>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </template>
+
+                <!-- Action Buttons -->
+                <div class="slds-text-align_center slds-m-top_medium">
+                    <lightning-button
+                        label="Confirm Estimate & Set Pricing"
+                        variant="brand"
+                        onclick={handleConfirmEstimate}
+                        disabled={isConfirmDisabled}
+                        class="slds-m-right_small">
+                    </lightning-button>
+                    <lightning-button
+                        label="Cancel"
+                        variant="neutral"
+                        onclick={handleCancel}>
+                    </lightning-button>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

@@ -1,0 +1,257 @@
+<apex:page renderAs="pdf" showHeader="false" sidebar="false" standardStylesheets="false" applyBodyTag="false" applyHtmlTag="false"
+    standardController="Quote" extensions="QuoteExtension,QuoteLogoExtension,ProductImageController">
+
+    <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                @page {
+                    size: A4 landscape;
+                    margin-top: 3.5cm;
+                    margin-bottom: 3.5cm;
+
+                    thead {
+                        display: table-header-group;
+                    }
+
+                    @top-center {
+                        content: element(header);
+                    }
+                    @bottom-left {
+                        content: element(footer);
+                    }
+
+                }
+
+                div.header {
+                    position: running(header);
+                }
+                div.footer {
+                    display: block;
+                    position: running(footer);
+                }
+
+
+                body {
+                    font-family: Arial, sans-serif;
+                }
+                .quote-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 2px; /* Space between tables */
+                    page-break-inside: avoid;
+                }
+                img {
+                    max-width: 100px; /* Limit image width */
+                    max-height: 75px; /* Limit image height */
+                }
+
+                /** Commented due to conflicting with inline styling on the table which was preventing items printing on the first page when there were 5 items.
+                table, tr, td, tbody {
+                    page-break-inside: avoid;
+                }
+                */
+
+                th, td {
+                    border: 1px solid black;
+                    padding: 2px;
+                    text-align: left; /* Consistent alignment */
+                }
+                th {
+                    background-color: #f0f0f0; /* Header background color */
+                    font-weight: bold;
+                }
+                td p {
+                    margin: 0;
+                    line-height: 1; /* Reduced line height */
+                }
+                .clearfix {
+                    clear: both;
+                }
+                .header {
+                    border-bottom: 2px solid #ccc;
+                    padding-bottom: 10px;
+                   height: 100px;
+                   width: 28cm;
+                }
+
+               .left-logo img,
+                .right-logo img {
+                    width: 250px;
+                    height: 90px;
+                    vertical-align: middle;
+                }
+                .footer {
+                    border-top: 2px solid #ccc;
+                    padding-top: 2px;
+                    font-size: 12px;
+                }
+                .quote-section {
+                    padding: 0px 0; /* Reduced top and bottom padding */
+                    border-bottom: 2px solid black;
+                }
+                .quote-details-left, .quote-details-right {
+                    float: left;
+                    width: 45%;
+                    padding: 0px 0; /* Reduced padding for details */
+                    line-height: .5; /* Reduce line height */
+                }
+                .quote-details-right {
+                    float: right;
+                    text-align: right;
+                    line-height: .5; /* Reduce line height */
+                }
+                .table-title {
+                    background-color: #D7D9D7;
+                    padding: 0px;
+                    text-align: left;
+                    font-weight: bold;
+                }
+            </style>
+        </head>
+
+        <body>
+
+
+            <!-- Custom Header Section -->
+            <div class="header">
+                <div>
+                    <div class="left-logo" style="float:left">
+                        <apex:outputPanel rendered="{!NOT(ISNULL(logoStaticResource))}">
+                        <apex:image value="{!URLFOR($Resource[logoStaticResource])}" alt="Company Logo" />
+                        </apex:outputPanel>
+                    </div>
+                    <div class="right-logo" style="float:right">
+                        <img src="{!$Resource.CDN_Logo_PDF}" alt="Caps Direct"   />
+                    </div>
+                </div>
+
+                <div style="clear:both;"></div>
+                <div style="background-color: #ffffff; padding: 0px; text-align: center; font-weight: bold;">OVERSEAS CUSTOM</div>
+            </div>
+
+
+            <!-- Footer Section -->
+            <div class="footer" style="page-break-inside: avoid;">
+                <table style="width: 100%;">
+                    <tr>
+                        <td style="vertical-align: top; width: 50%; padding-right: 20px;">
+                            <p><strong>Sample lead time:</strong> Spec samples delivered in approximately 3-4 weeks.</p>
+                            <p><strong>Production lead time:</strong> Lead time starts after sample approval and PO is placed.</p>
+                            <p><strong>Shipping:</strong></p>
+                            <p style="margin-left: 20px;">OCEAN: Price quoted FOB Kansas City. Local delivery invoiced separately.</p>
+                            <p style="margin-left: 20px;">AIR: Price quoted includes local delivery.</p>
+                        </td>
+                        <td style="vertical-align: top; width: 50%;">
+                            <p><strong>Payment Terms:</strong>{!paymentTerms}.</p>
+                            <p><strong>Packaging:</strong> 144 pcs per master; 6 inner cartons; 24 pcs per inner; 12 pcs per polybag.</p>
+                            <p style= "color: red;"><strong>Price Validity:</strong>Prices quoted are based on current import duties and tariffs. Caps Direct reserves the right to change the price if an import tax/tariff occurs.</p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <!-- Quote Details Section -->
+            <div class="quote-section">
+                <div class="quote-details-left">
+                    <p><strong>Quote Number:</strong> {!quote.QuoteNumber}</p>
+                    <p><strong>Expiration Date:</strong>
+                        <apex:outputText value="{0, date, MM/dd/yyyy}">
+                            <apex:param value="{!quote.ExpirationDate}" />
+                        </apex:outputText>
+                    </p>
+                    <p><strong>Quote To:</strong> {!quote.Contact.Name}</p>
+                    <p><strong>Account:</strong> {!quote.Account.Name}</p>
+                </div>
+                <div class="quote-details-right">
+                    <p><strong>Company Address:</strong></p>
+                    <p>7007 College Blvd Suite 700</p>
+                    <p>Overland Park, KS 66211</p>
+                    <p><strong>Prepared By:</strong> {!quote.Owner.Name}</p>
+                    <p><strong>Email:</strong> {!quote.Owner.Email}</p>
+                </div>
+                <!-- Clear floats -->
+                <div class="clearfix"></div>
+            </div>
+            <!-- Table Title -->
+            <div class="table-title">Quote Details</div>
+            <!-- Quote Items Table -->
+            <!-- <div style="Page-break-inside: avoid;"> -->
+                <table class="quote-table" style="page-break-inside:auto;">
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">Image</th>
+                            <th style="width: 35%;">Product</th>
+                            <th style="width: 30%;">Lead Time</th>
+                            <th style="width: 7%;">1008</th>
+                            <th style="width: 7%;">576</th>
+                            <th style="width: 5%;">288</th>
+                            <th style="width: 5%;">144</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <apex:repeat value="{!ProductModels}" var="item">
+                            <tr style="page-break-inside: avoid; page-break-after:auto;">
+                                <td>
+                                    <apex:image value="{!item.ImageURL}" alt="Product Image" style="width: 100px; height: 75px;" />
+                                </td>
+                                <td style="word-wrap: break-word;">
+                                    <p>{!item.ProductCode}</p>
+                                    <p>{!item.Name}</p>
+                                    <p>{!item.Description}</p>
+                                    <apex:outputPanel rendered="{!NOT(ISBLANK(item.Mold_Charge))}">
+                                        <p><strong>Mold Charge:</strong>
+                                            <apex:outputText value="{0, number, currency}">
+                                                <apex:param value="{!item.Mold_Charge}" />
+                                            </apex:outputText>
+                                        </p>
+                                    </apex:outputPanel>
+                                </td>
+
+                                <td>
+                                    <p>COO: {!item.COO}</p>
+                                    <p>{!item.Ocean_Leadtime}</p>
+                                    <p>{!item.Air_Lead_Time}</p>
+                                </td>
+                                <td>
+                                    <apex:outputText value="{0, number, currency}">
+                                        <apex:param value="{!item.X1008_Ocean_Currency}" />
+                                    </apex:outputText><br/>
+                                    <apex:outputText value="{0, number, currency}">
+                                        <apex:param value="{!item.X1008_Air_Currency}" />
+                                    </apex:outputText>
+                                </td>
+                                <td>
+                                    <apex:outputText value="{0, number, currency}">
+                                        <apex:param value="{!item.X576_Ocean_Currency}" />
+                                    </apex:outputText><br/>
+                                    <apex:outputText value="{0, number, currency}">
+                                        <apex:param value="{!item.X576_Air_Currency}" />
+                                    </apex:outputText>
+                                </td>
+                                <td>
+                                    <apex:outputText value="{0, number, currency}">
+                                        <apex:param value="{!item.X288_Ocean_Currency}" />
+                                    </apex:outputText><br/>
+                                    <apex:outputText value="{0, number, currency}">
+                                        <apex:param value="{!item.X288_Air_Currency}" />
+                                    </apex:outputText>
+                                </td>
+                                <td>
+                                    <apex:outputText value="{0, number, currency}">
+                                        <apex:param value="{!item.X144_Ocean_Currency}" />
+                                    </apex:outputText><br/>
+                                    <apex:outputText value="{0, number, currency}">
+                                        <apex:param value="{!item.X144_Air_Currency}" />
+                                    </apex:outputText>
+                                </td>
+                            </tr>
+                        </apex:repeat>
+                    </tbody>
+                </table>
+            <!-- </div> -->
+
+        </body>
+    </html>
+</apex:page>

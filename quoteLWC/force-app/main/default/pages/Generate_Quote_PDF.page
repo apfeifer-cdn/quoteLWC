@@ -1,0 +1,3 @@
+<apex:page standardController="Quote" extensions="QuotePDFControllerExtension" action="{!generateOriginalQuotePDF}">
+    <apex:pageMessages />
+</apex:page>

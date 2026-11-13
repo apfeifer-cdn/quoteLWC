@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>62.0</apiVersion>
+    <environments>Default</environments>
+    <interviewLabel>Create Quote From Opportunity {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Create Quote From Opportunity</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>Flow</processType>
+    <runInMode>DefaultMode</runInMode>
+    <status>Draft</status>
+
+    <!-- ============ VARIABLES ============ -->
+
+    <!-- Input: Opportunity Record ID (auto-populated when launched from Opportunity) -->
+    <variables>
+        <name>recordId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+
+    <!-- Input: Minimum tier quantity -->
+    <variables>
+        <name>varMinQuantity</name>
+        <dataType>Number</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+        <scale>0</scale>
+        <value>
+            <numberValue>72.0</numberValue>
+        </value>
+    </variables>
+
+    <!-- Input: Maximum tier quantity -->
+    <variables>
+        <name>varMaxQuantity</name>
+        <dataType>Number</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+        <scale>0</scale>
+        <value>
+            <numberValue>50112.0</numberValue>
+        </value>
+    </variables>
+
+    <!-- Input: Quote expiration date -->
+    <variables>
+        <name>varExpirationDate</name>
+        <dataType>Date</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+
+    <!-- Output: Created Quote ID returned from the LWC -->
+    <variables>
+        <name>varQuoteId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+
+    <!-- ============ START ============ -->
+
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Quote_Product_Selection_Screen</targetReference>
+        </connector>
+    </start>
+
+    <!-- ============ SCREEN: Quote Product Selector LWC ============ -->
+
+    <screens>
+        <name>Quote_Product_Selection_Screen</name>
+        <label>Quote Product Selection</label>
+        <locationX>50</locationX>
+        <locationY>158</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <showFooter>false</showFooter>
+        <showHeader>false</showHeader>
+        <connector>
+            <targetReference>Assign_Quote_Id</targetReference>
+        </connector>
+        <fields>
+            <name>quoteProductSelector</name>
+            <extensionName>c:quoteProductSelector</extensionName>
+            <fieldType>ComponentInstance</fieldType>
+            <inputParameters>
+                <name>opportunityId</name>
+                <value>
+                    <elementReference>recordId</elementReference>
+                </value>
+            </inputParameters>
+            <inputParameters>
+                <name>minQuantity</name>
+                <value>
+                    <elementReference>varMinQuantity</elementReference>
+                </value>
+            </inputParameters>
+            <inputParameters>
+                <name>maxQuantity</name>
+                <value>
+                    <elementReference>varMaxQuantity</elementReference>
+                </value>
+            </inputParameters>
+            <inputParameters>
+                <name>expirationDate</name>
+                <value>
+                    <elementReference>varExpirationDate</elementReference>
+                </value>
+            </inputParameters>
+            <outputParameters>
+                <name>quoteId</name>
+                <assignToReference>varQuoteId</assignToReference>
+            </outputParameters>
+        </fields>
+    </screens>
+
+    <!-- ============ ASSIGNMENT: Store Quote ID for output ============ -->
+
+    <assignments>
+        <name>Assign_Quote_Id</name>
+        <label>Assign Quote Id</label>
+        <locationX>50</locationX>
+        <locationY>316</locationY>
+        <assignmentItems>
+            <assignToReference>varQuoteId</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>varQuoteId</elementReference>
+            </value>
+        </assignmentItems>
+    </assignments>
+</Flow>

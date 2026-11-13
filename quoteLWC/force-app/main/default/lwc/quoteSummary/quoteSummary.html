@@ -1,0 +1,180 @@
+<template>
+    <lightning-card title="Quote Summary" icon-name="standard:quote">
+        <div class="slds-p-around_medium">
+            <template if:true={hasProducts}>
+                <p class="slds-text-body_regular slds-m-bottom_medium">
+                    Review the selected products and pricing below before creating the quote.
+                </p>
+
+                <template for:each={selectedProducts} for:item="product">
+                    <div key={product.productId} class="slds-box slds-m-bottom_small product-summary-card">
+                        <div class="slds-grid slds-grid_align-spread slds-m-bottom_small">
+                            <div class="slds-col">
+                                <h3 class="slds-text-heading_small">{product.productName}</h3>
+                                <p class="slds-text-body_small slds-text-color_weak">{product.productCode}</p>
+                            </div>
+                            <div class="slds-col slds-no-flex">
+                                <lightning-button-icon
+                                    icon-name="utility:delete"
+                                    alternative-text="Remove product"
+                                    variant="bare"
+                                    data-product-id={product.productId}
+                                    onclick={handleRemoveProduct}
+                                    class="slds-text-color_error">
+                                </lightning-button-icon>
+                            </div>
+                        </div>
+
+                        <!-- Estimator Breakdown (Quick Products only) -->
+                        <template if:true={product.estimateBreakdown}>
+                            <div class="slds-box slds-box_x-small slds-theme_shade slds-m-bottom_small">
+                                <p class="slds-text-title_caps slds-m-bottom_xx-small">Decoration Estimate</p>
+                                <template for:each={product.estimateBreakdown} for:item="item">
+                                    <div key={item.label} class="slds-grid slds-grid_align-spread slds-text-body_small">
+                                        <span>{item.label}</span>
+                                        <lightning-formatted-number
+                                            value={item.price}
+                                            format-style="currency"
+                                            currency-code="USD"
+                                            minimum-fraction-digits="2"
+                                            maximum-fraction-digits="4">
+                                        </lightning-formatted-number>
+                                    </div>
+                                </template>
+                                <div class="slds-grid slds-grid_align-spread slds-text-body_small slds-text-title_bold slds-border_top slds-p-top_xx-small slds-m-top_xx-small">
+                                    <span>Estimated Unit Price</span>
+                                    <lightning-formatted-number
+                                        value={product.estimatedUnitPrice}
+                                        format-style="currency"
+                                        currency-code="USD"
+                                        minimum-fraction-digits="2"
+                                        maximum-fraction-digits="4">
+                                    </lightning-formatted-number>
+                                </div>
+                            </div>
+                        </template>
+
+                        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_compact">
+                            <thead>
+                                <tr class="slds-line-height_reset">
+                                    <th class="slds-text-title_caps" scope="col">Quantity</th>
+                                    <th class="slds-text-title_caps" scope="col">
+                                        <template if:true={product.showMargin}>Ocean Price</template>
+                                        <template if:false={product.showMargin}>Price</template>
+                                    </th>
+                                    <template if:true={product.showMargin}>
+                                        <th class="slds-text-title_caps" scope="col">Ocean Margin</th>
+                                    </template>
+                                    <template if:false={product.isQuickProduct}>
+                                        <th class="slds-text-title_caps" scope="col">Air Price</th>
+                                    </template>
+                                    <template if:true={product.showMargin}>
+                                        <th class="slds-text-title_caps" scope="col">Air Margin</th>
+                                    </template>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={product.pricingRows} for:item="tier">
+                                    <tr key={tier.quantity}>
+                                        <td>
+                                            <lightning-formatted-number
+                                                value={tier.quantity}
+                                                format-style="decimal">
+                                            </lightning-formatted-number>
+                                        </td>
+                                        <td>
+                                            <template if:true={tier.oceanPrice}>
+                                                <lightning-formatted-number
+                                                    value={tier.oceanPrice}
+                                                    format-style="currency"
+                                                    currency-code="USD"
+                                                    minimum-fraction-digits="2"
+                                                    maximum-fraction-digits="4">
+                                                </lightning-formatted-number>
+                                            </template>
+                                            <template if:false={tier.oceanPrice}>
+                                                <span class="slds-text-color_weak">&mdash;</span>
+                                            </template>
+                                        </td>
+                                        <template if:true={product.showMargin}>
+                                            <td>
+                                                <template if:true={tier.oceanMargin}>
+                                                    <lightning-formatted-number
+                                                        value={tier.oceanMarginDecimal}
+                                                        format-style="percent"
+                                                        minimum-fraction-digits="2">
+                                                    </lightning-formatted-number>
+                                                </template>
+                                                <template if:false={tier.oceanMargin}>
+                                                    <span class="slds-text-color_weak">&mdash;</span>
+                                                </template>
+                                            </td>
+                                        </template>
+                                        <template if:false={product.isQuickProduct}>
+                                            <td>
+                                                <template if:true={tier.airPrice}>
+                                                    <lightning-formatted-number
+                                                        value={tier.airPrice}
+                                                        format-style="currency"
+                                                        currency-code="USD"
+                                                        minimum-fraction-digits="2"
+                                                        maximum-fraction-digits="4">
+                                                    </lightning-formatted-number>
+                                                </template>
+                                                <template if:false={tier.airPrice}>
+                                                    <span class="slds-text-color_weak">&mdash;</span>
+                                                </template>
+                                            </td>
+                                        </template>
+                                        <template if:true={product.showMargin}>
+                                            <td>
+                                                <template if:true={tier.airMargin}>
+                                                    <lightning-formatted-number
+                                                        value={tier.airMarginDecimal}
+                                                        format-style="percent"
+                                                        minimum-fraction-digits="2">
+                                                    </lightning-formatted-number>
+                                                </template>
+                                                <template if:false={tier.airMargin}>
+                                                    <span class="slds-text-color_weak">&mdash;</span>
+                                                </template>
+                                            </td>
+                                        </template>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+
+                <div class="slds-m-top_medium slds-grid slds-grid_align-center">
+                    <lightning-button
+                        label="Create Quote"
+                        variant="brand"
+                        onclick={handleSubmitQuote}
+                        class="slds-m-right_small">
+                    </lightning-button>
+                    <lightning-button
+                        label="Go Back"
+                        variant="neutral"
+                        onclick={handleGoBack}>
+                    </lightning-button>
+                </div>
+            </template>
+
+            <template if:false={hasProducts}>
+                <div class="slds-text-align_center">
+                    <p class="slds-text-body_regular slds-m-top_medium">
+                        No products selected for quoting. Go back to select products.
+                    </p>
+                    <lightning-button
+                        label="Go Back"
+                        variant="neutral"
+                        onclick={handleGoBack}
+                        class="slds-m-top_medium">
+                    </lightning-button>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

@@ -1,0 +1,165 @@
+<template>
+    <template if:true={isShowWorkingSpinner}>
+        <lightning-spinner alternative-text="Working" size="large"></lightning-spinner>
+    </template>
+
+    <template if:true={errorMessage}>
+        <div class="slds-notify slds-notify_alert slds-theme_error" role="alert">
+            <span class="slds-assistive-text">error</span>
+            <lightning-icon icon-name="utility:error" variant="inverse" size="x-small"></lightning-icon>
+            <p class="slds-var-p-left_medium slds-var-p-right_medium">{errorMessage}</p>
+        </div>
+    </template>
+
+    <template if:true={isReady}>
+        <template if:false={showQuoteForm}>
+            <div class="slds-form-element slds-form-element_horizontal">
+                <label class="slds-form-element__label">Quantity</label>
+                <lightning-helptext content={helpText.qty}></lightning-helptext>
+                <div class="slds-form-element__control">
+                    <lightning-input type="number" variant="label-hidden" onchange={quantityChange} value={selectedQuantity}
+                        min={quantityOpts.lowerBound} max={quantityOpts.upperBound} step="1" class="estimate-qty number-input__input"></lightning-input>
+                </div>
+            </div>
+            
+            <lightning-combobox label="Main Decoration" variant="label-inline" options={mainDecorationOpts} placeholder="(Select)"
+                value={selectedMainDecoration} onchange={mainDecorationChange} field-level-help={helpText.mainDecoration}></lightning-combobox>
+
+            <template if:true={hasSecondaryDecorations}>
+                <div class="slds-form-element slds-form-element_horizontal">
+                    <label class="slds-form-element__label">Additional Decorations</label>
+                    <lightning-helptext content={helpText.addlDecoration}></lightning-helptext>
+                    <div class="slds-form-element__control">
+                        <lightning-combobox variant="label-hidden" placeholder="(Add Decoration)" class="add-decoration"
+                            options={addlDecorationOpts} onchange={addDecorationChange}></lightning-combobox>
+                    </div>
+                </div>
+                <div class="slds-form-element slds-form-element_horizontal">
+                    <div class="slds-form-element__control">
+                        <lightning-pill-container items={selectedAdditionalDecorations} onitemremove={removeDecoration}></lightning-pill-container>
+                    </div>
+                </div>
+            </template>
+        </template>
+
+        <template if:true={showQuoteForm}>
+            <div class="slds-form-element slds-form-element_horizontal">
+                <label class="slds-form-element__label">Name</label>
+                <div class="slds-form-element__control">
+                    <lightning-input variant="label-hidden" onchange={quoteInputChange} value={quoteInput.name} name="name" class="validate" required></lightning-input>
+                </div>
+            </div>
+            <div class="slds-form-element slds-form-element_horizontal">
+                <label class="slds-form-element__label">Email</label>
+                <div class="slds-form-element__control">
+                    <lightning-input type="email" variant="label-hidden" onchange={quoteInputChange} value={quoteInput.email} name="email" class="validate" required></lightning-input>
+                </div>
+            </div>
+            <div class="slds-form-element slds-form-element_horizontal">
+                <label class="slds-form-element__label">Product</label>
+                <div class="slds-form-element__control">{productInfo.name} ({productInfo.sku})</div>
+            </div>
+            <div class="slds-form-element slds-form-element_horizontal">
+                <label class="slds-form-element__label">Quantity</label>
+                <div class="slds-form-element__control">{selectionEstimate.qty}</div>
+            </div>
+        </template>
+
+        <template if:true={selectionEstimate}>
+            <table class="estimate-output">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th class="slds-text-align_right">Unit Price</th>
+                        <th class="slds-text-align_right">Quantity</th>
+                        <th class="slds-text-align_right"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template for:each={selectionEstimate.items} for:item="item">
+                        <tr key={item}>
+                            <td><label class="slds-form-element__label">{item.itemLabel}</label></td>
+                            <td class="slds-text-align_right"><lightning-formatted-text value={item.priceFormatted}></lightning-formatted-text></td>
+                            <td class="slds-text-align_right"><lightning-formatted-text value={item.qty}></lightning-formatted-text></td>
+                            <td class="slds-text-align_right"><lightning-formatted-text value={item.totalFormatted}></lightning-formatted-text></td>
+                        </tr>
+                    </template>
+                    <tr>
+                        <td colspan="4">
+                            <div class="slds-var-m-top_small">
+                                <label class="slds-checkbox_toggle slds-grid">
+                                    <span class="slds-form-element__label slds-m-bottom_none slds-assistive-text">
+                                        Toggle Shipping estimate
+                                    </span>
+                                    <input type="checkbox" checked={isCalculateShipping} onchange={handleShippingToggle} />
+                                    <span class="slds-checkbox_faux_container">
+                                        <span class="slds-checkbox_faux"></span>
+                                        <span class="slds-checkbox_on">Shipping (US)</span>
+                                        <span class="slds-checkbox_off">Shipping (US)</span>
+                                    </span>
+                                </label>
+                            </div>
+                        </td>
+                    </tr>
+                    <template if:true={isCalculateShipping}>
+                        <tr>
+                            <td colspan="3">
+                                <lightning-input placeholder="Zip" value={shippingZip} onchange={handleZipChange} class="number-input__input slds-m-bottom_none"
+                                    variant="label-hidden"></lightning-input>
+                                <template if:true={shippingOptions}>
+                                    <lightning-combobox
+                                        options={shippingOptions} onchange={handleShippingSelection} value={shippingSelection}
+                                        variant="label-hidden" class="display-inline slds-var-m-left_small slds-m-bottom_none"></lightning-combobox>
+                                </template>
+
+                                <template if:true={shippingMessage}>
+                                    <div class="slds-notify slds-notify_alert slds-theme_warning display-inline shipping-message slds-var-m-left_small" role="alert">
+                                        <span class="slds-assistive-text">warning</span>
+                                        <lightning-icon icon-name="utility:warning" variant="inverse" size="x-small"></lightning-icon>
+                                        <p class="slds-var-p-left_medium slds-var-p-right_medium display-inline">{shippingMessage}</p>
+                                    </div>
+                                </template>
+                            </td>
+                            <td class="slds-text-align_right"><lightning-formatted-text value={shippingCostFormatted}></lightning-formatted-text></td>
+                        </tr>
+                    </template>
+                </tbody>
+                <tfoot>
+                    <tr class="summary-row">
+                        <td><label class="slds-form-element__label">Estimated Total Unit Price</label></td>
+                        <td class="slds-text-align_right"><lightning-formatted-text value={totalPriceFormatted}></lightning-formatted-text></td>
+                        <td class="slds-text-align_right"><lightning-formatted-text value={totalQuantityFormatted}></lightning-formatted-text></td>
+                        <td class="slds-text-align_right grand-total"><lightning-formatted-text value={totalFormatted}></lightning-formatted-text></td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <template if:false={showQuoteForm}>
+                <p class="slds-text-align_center slds-text-color_weak">{helpText.disclaimer}</p>
+
+                <template if:true={isLoggedIn}>
+                    <div class="slds-grid slds-gutters">
+                        <div class="slds-col slds-text-align_center">
+                            <lightning-button label="Download" onclick={downloadPDF} disabled={isDownloadDisabled}></lightning-button>
+                        </div>
+                        <div class="slds-col slds-text-align_center">
+                            <lightning-button label="Request a Quote" onclick={requestQuote} disabled={isRequestQuoteDisabled}></lightning-button>
+                        </div>
+                    </div>
+                </template>
+                <template if:false={isLoggedIn}>
+                    <p class="slds-text-align_center">{helpText.more}</p>
+                </template>
+            </template>
+        </template>
+
+        <template if:true={showQuoteForm}>
+            <div class="slds-form-element slds-form-element_horizontal">
+                <lightning-textarea label="Additional Details" onchange={quoteInputChange} name="details" value={quoteInput.details}></lightning-textarea>
+            </div>
+            <div class="slds-form-element slds-form-element_horizontal slds-text-align_right">
+                <lightning-button label="Submit" onclick={requestQuoteSubmit}></lightning-button>
+            </div>
+        </template>
+    </template>
+</template>

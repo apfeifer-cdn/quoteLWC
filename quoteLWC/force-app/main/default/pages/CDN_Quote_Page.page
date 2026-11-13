@@ -1,0 +1,345 @@
+<apex:page renderAs="pdf" showHeader="false" sidebar="false" standardStylesheets="false" applyBodyTag="false" applyHtmlTag="false"
+    standardController="Quote" extensions="QuoteExtension,QuoteLogoExtension,ProductImageController">
+
+    <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                @page {
+                    size: A4 landscape;
+                    margin-top: 3.5cm;
+                    margin-bottom: 3.5cm;
+
+                    thead {
+                        display: table-header-group;
+                    }
+
+                    @top-center {
+                        content: element(header);
+                    }
+                    @bottom-left {
+                        content: element(footer);
+                    }
+
+                }
+
+                div.header {
+                    position: running(header);
+                }
+                div.footer {
+                    display: block;
+                    position: running(footer);
+                }
+
+
+                body {
+                    font-family: Arial, sans-serif;
+                }
+                .quote-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 2px;
+                    page-break-inside: avoid;
+                }
+                img {
+                    max-width: 100px;
+                    max-height: 75px;
+                }
+
+                th, td {
+                    border: 1px solid black;
+                    padding: 2px;
+                    text-align: left;
+                }
+                th {
+                    background-color: #f0f0f0;
+                    font-weight: bold;
+                }
+                td p {
+                    margin: 0;
+                    line-height: 1;
+                }
+                .clearfix {
+                    clear: both;
+                }
+                .header {
+                    padding-bottom: 0px;
+                   height: auto;
+                   width: 28cm;
+                }
+
+               .left-logo img,
+                .right-logo img {
+                    width: 250px;
+                    height: 90px;
+                    vertical-align: middle;
+                }
+                .footer {
+                    border-top: 2px solid #ccc;
+                    padding-top: 2px;
+                    font-size: 12px;
+                }
+                .quote-section {
+                    padding: 0px 0;
+                    border-bottom: 2px solid black;
+                }
+                .quote-details-left, .quote-details-right {
+                    float: left;
+                    width: 45%;
+                    padding: 0px 0;
+                    line-height: .5;
+                }
+                .quote-details-right {
+                    float: right;
+                    text-align: right;
+                    line-height: .5;
+                }
+                .table-title {
+                    background-color: #D7D9D7;
+                    padding: 0px;
+                    text-align: left;
+                    font-weight: bold;
+                }
+            </style>
+        </head>
+
+        <body>
+
+
+            <!-- Custom Header Section -->
+            <div class="header">
+                <div>
+                    <div class="left-logo" style="float:left">
+                        <apex:outputPanel rendered="{!NOT(ISNULL(logoStaticResource))}">
+                        <apex:image value="{!URLFOR($Resource[logoStaticResource])}" alt="Company Logo" />
+                        </apex:outputPanel>
+                    </div>
+                    <div class="right-logo" style="float:right">
+                        <img src="{!$Resource.CDN_Logo_PDF}" alt="Caps Direct"   />
+                    </div>
+                </div>
+
+                <div style="clear:both;"></div>
+                <div><img src="{!$Resource.CDN_Banner_PDF}" alt="" style="width: 100%; height: auto; display: block;" /></div>
+            </div>
+
+
+            <!-- Footer Section -->
+            <div class="footer" style="page-break-inside: avoid;">
+                <table style="width: 100%;">
+                    <tr>
+                        <td style="vertical-align: top; width: 50%; padding-right: 20px;">
+                            <p><strong>Samples and Sew Outs:</strong> Full spec samples delivered in approximately 3-4 weeks. Essentials by Caps Direct sew otus available within 48 hours of PO placement.</p>
+                            <p><strong>Production lead time:</strong> Lead time starts after PO placement and sample/sew out approval.</p>
+                            <p><strong>FOB:</strong></p>
+                            <p style="margin-left: 20px;">OCEAN: Price quoted FOB Kansas City. Local delivery invoiced separately.</p>
+                            <p style="margin-left: 20px;">AIR: Price quoted includes local delivery.</p>
+                            <p style="margin-left: 20px;">ESSENTIALS BY CAPS DIRECT: FOB Douglas Arizon. Local delivery invoiced separately.</p>
+                        </td>
+                        <td style="vertical-align: top; width: 50%;">
+                            <p><strong>Payment Terms:</strong>{!paymentTerms}.</p>
+                            <p><strong>Packaging:</strong> 144 pcs per master; 6 inner cartons; 24 pcs per inner; 12 pcs per polybag.</p>
+                            <p style= "color: red;"><strong>Price Validity:</strong>Prices quoted are based on current import duties and tariffs. Caps Direct reserves the right to change the price if an import tax/tariff occurs.</p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <!-- Quote Details Section -->
+            <div class="quote-section">
+                <div class="quote-details-left">
+                    <p><strong>Quote Number:</strong> {!quote.QuoteNumber}</p>
+                    <p><strong>Expiration Date:</strong>
+                        <apex:outputText value="{0, date, MM/dd/yyyy}">
+                            <apex:param value="{!quote.ExpirationDate}" />
+                        </apex:outputText>
+                    </p>
+                    <p><strong>Quote To:</strong> {!quote.Contact.Name}</p>
+                    <p><strong>Account:</strong> {!quote.Account.Name}</p>
+                </div>
+                <div class="quote-details-right">
+                    <p><strong>Company Address:</strong></p>
+                    <p>7007 College Blvd Suite 700</p>
+                    <p>Overland Park, KS 66211</p>
+                    <p><strong>Prepared By:</strong> {!quote.Owner.Name}</p>
+                    <p><strong>Email:</strong> {!quote.Owner.Email}</p>
+                </div>
+                <!-- Clear floats -->
+                <div class="clearfix"></div>
+            </div>
+            <!-- Table Title -->
+            <div class="table-title">Quote Details</div>
+            <!-- Quote Items Table -->
+                <table class="quote-table" style="page-break-inside:auto;">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Product</th>
+                            <th>Production Lead Time</th>
+                            <apex:outputPanel layout="none" rendered="{!has50112}">
+                                <th>50112</th>
+                            </apex:outputPanel>
+                            <apex:outputPanel layout="none" rendered="{!has20016}">
+                                <th>20016</th>
+                            </apex:outputPanel>
+                            <apex:outputPanel layout="none" rendered="{!has10080}">
+                                <th>10080</th>
+                            </apex:outputPanel>
+                            <apex:outputPanel layout="none" rendered="{!has5040}">
+                                <th>5040</th>
+                            </apex:outputPanel>
+                            <apex:outputPanel layout="none" rendered="{!has2592}">
+                                <th>2592</th>
+                            </apex:outputPanel>
+                            <apex:outputPanel layout="none" rendered="{!has1008}">
+                                <th>1008</th>
+                            </apex:outputPanel>
+                            <apex:outputPanel layout="none" rendered="{!has576}">
+                                <th>576</th>
+                            </apex:outputPanel>
+                            <apex:outputPanel layout="none" rendered="{!has288}">
+                                <th>288</th>
+                            </apex:outputPanel>
+                            <apex:outputPanel layout="none" rendered="{!has144}">
+                                <th>144</th>
+                            </apex:outputPanel>
+                            <apex:outputPanel layout="none" rendered="{!has72}">
+                                <th>72</th>
+                            </apex:outputPanel>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <apex:repeat value="{!ProductModels}" var="item">
+                            <tr style="page-break-inside: avoid; page-break-after:auto;">
+                                <td>
+                                    <apex:image value="{!item.ImageURL}" alt="Product Image" style="width: 100px; height: 75px;" />
+                                </td>
+                                <td style="word-wrap: break-word;">
+                                    <p>{!item.ProductCode}</p>
+                                    <p>{!item.Name}</p>
+                                    <p>{!item.Description}</p>
+                                    <apex:outputPanel rendered="{!NOT(ISBLANK(item.Custom_Description))}">
+                                        <p style="white-space: pre-wrap; word-wrap: break-word; font-size: 9px;">{!item.Custom_Description}</p>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!NOT(ISBLANK(item.Mold_Charge))}">
+                                        <p><strong>Mold Charge:</strong>
+                                            <apex:outputText value="{0, number, currency}">
+                                                <apex:param value="{!item.Mold_Charge}" />
+                                            </apex:outputText>
+                                        </p>
+                                    </apex:outputPanel>
+                                </td>
+
+                                <td>
+                                    <apex:outputPanel layout="none" rendered="{!item.IsQuick}">
+                                        <p>Lead Time: {!item.Ocean_Leadtime}</p>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel layout="none" rendered="{!NOT(item.IsQuick)}">
+                                        <p>COO: {!item.COO}</p>
+                                        <p>{!item.Ocean_Leadtime}</p>
+                                        <p>{!item.Air_Lead_Time}</p>
+                                    </apex:outputPanel>
+                                </td>
+                                <apex:outputPanel layout="none" rendered="{!has50112}">
+                                    <td>
+                                        <apex:outputText value="{0, number, currency}" rendered="{!NOT(ISNULL(item.X50112_Ocean_Currency))}">
+                                            <apex:param value="{!item.X50112_Ocean_Currency}" />
+                                        </apex:outputText>
+                                    </td>
+                                </apex:outputPanel>
+                                <apex:outputPanel layout="none" rendered="{!has20016}">
+                                    <td>
+                                        <apex:outputText value="{0, number, currency}" rendered="{!NOT(ISNULL(item.X20016_Ocean_Currency))}">
+                                            <apex:param value="{!item.X20016_Ocean_Currency}" />
+                                        </apex:outputText>
+                                    </td>
+                                </apex:outputPanel>
+                                <apex:outputPanel layout="none" rendered="{!has10080}">
+                                    <td>
+                                        <apex:outputText value="{0, number, currency}" rendered="{!NOT(ISNULL(item.X10080_Ocean_Currency))}">
+                                            <apex:param value="{!item.X10080_Ocean_Currency}" />
+                                        </apex:outputText>
+                                    </td>
+                                </apex:outputPanel>
+                                <apex:outputPanel layout="none" rendered="{!has5040}">
+                                    <td>
+                                        <apex:outputText value="{0, number, currency}" rendered="{!NOT(ISNULL(item.X5040_Ocean_Currency))}">
+                                            <apex:param value="{!item.X5040_Ocean_Currency}" />
+                                        </apex:outputText>
+                                    </td>
+                                </apex:outputPanel>
+                                <apex:outputPanel layout="none" rendered="{!has2592}">
+                                    <td>
+                                        <apex:outputText value="{0, number, currency}" rendered="{!NOT(ISNULL(item.X2592_Ocean_Currency))}">
+                                            <apex:param value="{!item.X2592_Ocean_Currency}" />
+                                        </apex:outputText>
+                                    </td>
+                                </apex:outputPanel>
+                                <apex:outputPanel layout="none" rendered="{!has1008}">
+                                    <td>
+                                        <apex:outputText value="{0, number, currency}" rendered="{!NOT(ISNULL(item.X1008_Ocean_Currency))}">
+                                            <apex:param value="{!item.X1008_Ocean_Currency}" />
+                                        </apex:outputText>
+                                        <apex:outputPanel layout="none" rendered="{!AND(item.ShowAir, NOT(ISNULL(item.X1008_Air_Currency)))}">
+                                            <br/>
+                                            <apex:outputText value="{0, number, currency}">
+                                                <apex:param value="{!item.X1008_Air_Currency}" />
+                                            </apex:outputText>
+                                        </apex:outputPanel>
+                                    </td>
+                                </apex:outputPanel>
+                                <apex:outputPanel layout="none" rendered="{!has576}">
+                                    <td>
+                                        <apex:outputText value="{0, number, currency}" rendered="{!NOT(ISNULL(item.X576_Ocean_Currency))}">
+                                            <apex:param value="{!item.X576_Ocean_Currency}" />
+                                        </apex:outputText>
+                                        <apex:outputPanel layout="none" rendered="{!AND(item.ShowAir, NOT(ISNULL(item.X576_Air_Currency)))}">
+                                            <br/>
+                                            <apex:outputText value="{0, number, currency}">
+                                                <apex:param value="{!item.X576_Air_Currency}" />
+                                            </apex:outputText>
+                                        </apex:outputPanel>
+                                    </td>
+                                </apex:outputPanel>
+                                <apex:outputPanel layout="none" rendered="{!has288}">
+                                    <td>
+                                        <apex:outputText value="{0, number, currency}" rendered="{!NOT(ISNULL(item.X288_Ocean_Currency))}">
+                                            <apex:param value="{!item.X288_Ocean_Currency}" />
+                                        </apex:outputText>
+                                        <apex:outputPanel layout="none" rendered="{!AND(item.ShowAir, NOT(ISNULL(item.X288_Air_Currency)))}">
+                                            <br/>
+                                            <apex:outputText value="{0, number, currency}">
+                                                <apex:param value="{!item.X288_Air_Currency}" />
+                                            </apex:outputText>
+                                        </apex:outputPanel>
+                                    </td>
+                                </apex:outputPanel>
+                                <apex:outputPanel layout="none" rendered="{!has144}">
+                                    <td>
+                                        <apex:outputText value="{0, number, currency}" rendered="{!NOT(ISNULL(item.X144_Ocean_Currency))}">
+                                            <apex:param value="{!item.X144_Ocean_Currency}" />
+                                        </apex:outputText>
+                                        <apex:outputPanel layout="none" rendered="{!AND(item.ShowAir, NOT(ISNULL(item.X144_Air_Currency)))}">
+                                            <br/>
+                                            <apex:outputText value="{0, number, currency}">
+                                                <apex:param value="{!item.X144_Air_Currency}" />
+                                            </apex:outputText>
+                                        </apex:outputPanel>
+                                    </td>
+                                </apex:outputPanel>
+                                <apex:outputPanel layout="none" rendered="{!has72}">
+                                    <td>
+                                        <apex:outputText value="{0, number, currency}" rendered="{!NOT(ISNULL(item.X72_Ocean_Currency))}">
+                                            <apex:param value="{!item.X72_Ocean_Currency}" />
+                                        </apex:outputText>
+                                    </td>
+                                </apex:outputPanel>
+                            </tr>
+                        </apex:repeat>
+                    </tbody>
+                </table>
+
+        </body>
+    </html>
+</apex:page>

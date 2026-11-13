@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>62.0</apiVersion>
+    <isExposed>true</isExposed>
+    <targets>
+        <target>lightning__FlowScreen</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__FlowScreen">
+            <property name="opportunityId" type="String" label="Opportunity ID" description="Record ID of the Opportunity launching the flow" />
+            <property name="minQuantity" type="Integer" label="Min Quantity" description="Minimum quantity for tier filtering" />
+            <property name="maxQuantity" type="Integer" label="Max Quantity" description="Maximum quantity for tier filtering" />
+            <property name="priceScheduleName" type="String" label="Price Schedule Name" description="Name fragment used to look up a PriceAdjustmentSchedule for tier 72 pricing on Simple products" />
+            <property name="expirationDate" type="String" label="Expiration Date" description="Quote expiration date in YYYY-MM-DD format" />
+            <property name="quoteId" type="String" label="Created Quote ID" role="outputOnly" description="ID of the created Quote record" />
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

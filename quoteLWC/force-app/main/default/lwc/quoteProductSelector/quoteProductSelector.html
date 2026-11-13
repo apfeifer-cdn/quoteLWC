@@ -1,0 +1,320 @@
+<template>
+    <!-- Loading State -->
+    <template if:true={isLoading}>
+        <div class="slds-align_absolute-center slds-p-around_large">
+            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            <p class="slds-m-left_small">{loadingMessage}</p>
+        </div>
+    </template>
+
+    <!-- Error State -->
+    <template if:true={errorMessage}>
+        <div class="slds-notify slds-notify_alert slds-alert_error slds-m-around_medium" role="alert">
+            <p>{errorMessage}</p>
+        </div>
+    </template>
+
+    <!-- No Products Found -->
+    <template if:true={isNoProducts}>
+        <lightning-card title="No Products Found" icon-name="standard:product">
+            <div class="slds-p-around_medium slds-text-align_center">
+                <p class="slds-text-body_regular">
+                    No eligible products found for this opportunity.
+                </p>
+            </div>
+        </lightning-card>
+    </template>
+
+    <!-- Product Selection Screen -->
+    <template if:true={isProductStep}>
+        <div class="slds-m-bottom_small">
+            <!-- Progress Bar -->
+            <div class="slds-grid slds-grid_align-spread slds-m-bottom_medium slds-p-horizontal_medium">
+                <span class="slds-text-body_small">
+                    Product {currentProductNumber} of {totalProducts}
+                </span>
+                <span class="slds-text-body_small">
+                    {selectedCount} selected so far
+                </span>
+            </div>
+            <lightning-progress-bar
+                value={progressPercent}
+                size="small"
+                class="slds-m-bottom_medium">
+            </lightning-progress-bar>
+
+            <!-- Quote Decision -->
+            <template if:false={showPricingForCurrent}>
+                <lightning-card title={currentProductTitle} icon-name="standard:product">
+                    <div class="slds-p-around_medium">
+                        <div class="slds-grid slds-gutters_small slds-m-bottom_large">
+                            <!-- Product Image -->
+                            <template if:true={currentProductImageUrl}>
+                                <div class="slds-col slds-shrink-none">
+                                    <div class="product-image-container">
+                                        <img src={currentProductImageUrl} alt={currentProductName} class="product-image" />
+                                    </div>
+                                </div>
+                            </template>
+                            <!-- Product Details -->
+                            <div class="slds-col slds-grow">
+                                <div class="slds-grid slds-wrap slds-gutters_small">
+                                    <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                                        <div class="slds-form-element">
+                                            <template if:true={isCurrentEditable}>
+                                                <lightning-record-picker
+                                                    label="Manufacturer"
+                                                    placeholder="Search manufacturers..."
+                                                    object-api-name="mfg__c"
+                                                    value={currentManufacturerId}
+                                                    onchange={handleManufacturerChange}>
+                                                </lightning-record-picker>
+                                            </template>
+                                            <template if:false={isCurrentEditable}>
+                                                <span class="slds-form-element__label">Manufacturer</span>
+                                                <div class="slds-form-element__static">{currentManufacturer}</div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                                        <div class="slds-form-element">
+                                            <span class="slds-form-element__label">Product Class</span>
+                                            <div class="slds-form-element__static">{currentProductClass}</div>
+                                        </div>
+                                    </div>
+                                    <template if:true={showCurrentBaseMargin}>
+                                        <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                                            <div class="slds-form-element">
+                                                <template if:true={isCurrentEditable}>
+                                                    <lightning-input
+                                                        type="number"
+                                                        label="Base Margin (%)"
+                                                        step="1"
+                                                        value={currentBaseMarginPercent}
+                                                        onchange={handleBaseMarginChange}>
+                                                    </lightning-input>
+                                                </template>
+                                                <template if:false={isCurrentEditable}>
+                                                    <span class="slds-form-element__label">Base Margin</span>
+                                                    <div class="slds-form-element__static">
+                                                        <lightning-formatted-number
+                                                            value={currentBaseMargin}
+                                                            format-style="percent"
+                                                            minimum-fraction-digits="2">
+                                                        </lightning-formatted-number>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <template if:true={showCurrentLdp}>
+                                        <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                                            <div class="slds-form-element">
+                                                <template if:true={isCurrentEditable}>
+                                                    <lightning-input
+                                                        type="number"
+                                                        label="LDP"
+                                                        formatter="currency"
+                                                        step="0.01"
+                                                        value={currentLdp}
+                                                        onchange={handleLdpChange}>
+                                                    </lightning-input>
+                                                </template>
+                                                <template if:false={isCurrentEditable}>
+                                                    <span class="slds-form-element__label">LDP</span>
+                                                    <div class="slds-form-element__static">
+                                                        <lightning-formatted-number
+                                                            value={currentLdp}
+                                                            format-style="currency"
+                                                            currency-code="USD"
+                                                            minimum-fraction-digits="2"
+                                                            maximum-fraction-digits="4">
+                                                        </lightning-formatted-number>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <template if:true={isQuickProduct}>
+                            <div class="slds-grid slds-wrap slds-gutters_small slds-m-bottom_medium">
+                                <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                                    <lightning-input
+                                        type="text"
+                                        label="Lead Time"
+                                        value={currentLeadTime}
+                                        onchange={handleLeadTimeChange}>
+                                    </lightning-input>
+                                </div>
+                            </div>
+                        </template>
+                        <template if:false={isQuickProduct}>
+                            <div class="slds-grid slds-wrap slds-gutters_small slds-m-bottom_medium">
+                                <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                                    <lightning-input
+                                        type="text"
+                                        label="Ocean Lead Time"
+                                        value={currentOceanLeadTime}
+                                        onchange={handleOceanLeadTimeChange}>
+                                    </lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                                    <lightning-input
+                                        type="text"
+                                        label="Air Lead Time"
+                                        value={currentAirLeadTime}
+                                        onchange={handleAirLeadTimeChange}>
+                                    </lightning-input>
+                                </div>
+                            </div>
+                        </template>
+
+                        <div class="slds-m-bottom_medium">
+                            <lightning-input
+                                type="checkbox"
+                                label="Add Description"
+                                checked={showCustomDescription}
+                                onchange={handleToggleCustomDescription}>
+                            </lightning-input>
+                            <template if:true={showCustomDescription}>
+                                <div class="slds-m-top_small">
+                                    <lightning-textarea
+                                        label="Custom Description"
+                                        value={currentCustomDescription}
+                                        max-length="5000"
+                                        onchange={handleCustomDescriptionChange}>
+                                    </lightning-textarea>
+                                </div>
+                            </template>
+                        </div>
+
+                        <div class="slds-text-align_center slds-m-top_medium">
+                            <p class="slds-text-heading_small slds-m-bottom_medium">
+                                Would you like to quote this product?
+                            </p>
+                            <lightning-button
+                                label="Yes, Quote This Product"
+                                variant="brand"
+                                onclick={handleQuoteYes}
+                                class="slds-m-right_small">
+                            </lightning-button>
+                            <lightning-button
+                                label="No, Skip"
+                                variant="neutral"
+                                onclick={handleQuoteNo}>
+                            </lightning-button>
+                        </div>
+                    </div>
+                </lightning-card>
+            </template>
+
+            <!-- Pricing Card (shown after Yes or after estimator for quick products) -->
+            <template if:true={showPricingForCurrent}>
+                <c-product-pricing-card
+                    product={currentProduct}
+                    tiers={filteredTiers}
+                    tier-config={tierConfigData}
+                    tier72-adjustment={tier72Adjustment}
+                    existing-pricing={currentExistingPricing}
+                    is-quick-product={isQuickProduct}
+                    estimated-base-price={currentEstimatedBasePrice}
+                    schedule-adjustments={scheduleAdjustments}
+                    base-style-code={currentBaseStyleCode}
+                    base-style-moq-price={currentBaseStyleMoqPrice}
+                    base-style-anchor-quantity={currentBaseStyleAnchorQuantity}
+                    base-style-schedule-adjustments={currentBaseStyleScheduleAdjustments}
+                    override-ldp={currentLdp}
+                    override-base-margin={currentBaseMarginPercent}
+                    override-manufacturer-rates={currentManufacturerRates}
+                    onpricingchange={handlePricingChange}>
+                </c-product-pricing-card>
+
+                <div class="slds-m-top_medium slds-text-align_center">
+                    <lightning-button
+                        label="Confirm & Continue"
+                        variant="brand"
+                        onclick={handleConfirmPricing}
+                        class="slds-m-right_small">
+                    </lightning-button>
+                    <lightning-button
+                        label="Don't Quote This Product"
+                        variant="neutral"
+                        onclick={handleCancelPricing}>
+                    </lightning-button>
+                </div>
+            </template>
+
+            <!-- Navigation -->
+            <div class="slds-m-top_medium slds-grid slds-grid_align-spread slds-p-horizontal_medium">
+                <template if:true={canGoBack}>
+                    <lightning-button
+                        label="Previous Product"
+                        variant="neutral"
+                        icon-name="utility:chevronleft"
+                        onclick={handlePrevious}>
+                    </lightning-button>
+                </template>
+                <template if:false={canGoBack}>
+                    <div></div>
+                </template>
+                <lightning-button
+                    label="Skip to Summary"
+                    variant="neutral"
+                    onclick={handleSkipToSummary}>
+                </lightning-button>
+            </div>
+        </div>
+    </template>
+
+    <!-- Estimator Step (Quick Products) -->
+    <template if:true={isEstimatorStep}>
+        <div class="slds-m-bottom_small">
+            <!-- Progress Bar -->
+            <div class="slds-grid slds-grid_align-spread slds-m-bottom_medium slds-p-horizontal_medium">
+                <span class="slds-text-body_small">
+                    Product {currentProductNumber} of {totalProducts}
+                </span>
+                <span class="slds-text-body_small">
+                    {selectedCount} selected so far
+                </span>
+            </div>
+            <lightning-progress-bar
+                value={progressPercent}
+                size="small"
+                class="slds-m-bottom_medium">
+            </lightning-progress-bar>
+
+            <c-quote-estimator
+                product={currentProduct}
+                onestimatecomplete={handleEstimateComplete}
+                oncancel={handleCancelEstimator}>
+            </c-quote-estimator>
+        </div>
+    </template>
+
+    <!-- Summary Screen -->
+    <template if:true={isSummaryStep}>
+        <c-quote-summary
+            selected-products={summaryProducts}
+            onremovequoteproduct={handleRemoveProduct}
+            onsubmitquote={handleCreateQuote}
+            ongoback={handleBackFromSummary}>
+        </c-quote-summary>
+    </template>
+
+    <!-- Success State -->
+    <template if:true={isDone}>
+        <lightning-card title="Quote Created" icon-name="standard:quote">
+            <div class="slds-p-around_medium slds-text-align_center">
+                <lightning-icon icon-name="action:approval" size="large" class="slds-m-bottom_medium"></lightning-icon>
+                <p class="slds-text-heading_small slds-m-bottom_small">
+                    Quote has been created successfully!
+                </p>
+                <p class="slds-text-body_regular">Quote ID: {quoteId}</p>
+            </div>
+        </lightning-card>
+    </template>
+</template>

@@ -1,0 +1,31 @@
+.base-tier-row {
+    background-color: var(--slds-g-color-brand-base-95, #eef4ff);
+    font-weight: 600;
+}
+
+.price-input,
+.margin-input {
+    min-width: 120px;
+}
+
+.product-image-container {
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--slds-g-color-border-base-1, #e5e5e5);
+    border-radius: 0.25rem;
+    overflow: hidden;
+    background: #fff;
+}
+
+.product-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+:host {
+    display: block;
+}

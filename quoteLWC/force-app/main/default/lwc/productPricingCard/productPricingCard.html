@@ -1,0 +1,200 @@
+<template>
+    <lightning-card title={productTitle} icon-name="standard:product">
+        <div class="slds-p-around_medium">
+            <!-- Product Info Header with Image -->
+            <div class="slds-grid slds-gutters_small slds-m-bottom_medium">
+                <!-- Product Image -->
+                <template if:true={productImageUrl}>
+                    <div class="slds-col slds-shrink-none">
+                        <div class="product-image-container">
+                            <img src={productImageUrl} alt={product.Name} class="product-image" />
+                        </div>
+                    </div>
+                </template>
+                <!-- Product Details -->
+                <div class="slds-col slds-grow">
+                    <div class="slds-grid slds-wrap slds-gutters_small">
+                        <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                            <div class="slds-form-element">
+                                <span class="slds-form-element__label">Product Code</span>
+                                <div class="slds-form-element__static">{product.ProductCode}</div>
+                            </div>
+                        </div>
+                        <template if:true={isQuickProduct}>
+                            <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                                <div class="slds-form-element">
+                                    <span class="slds-form-element__label">Base Style</span>
+                                    <div class="slds-form-element__static">{baseStyleCode}</div>
+                                </div>
+                            </div>
+                        </template>
+                        <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                            <div class="slds-form-element">
+                                <template if:true={isEditable}>
+                                    <lightning-record-picker
+                                        label="Manufacturer"
+                                        placeholder="Search manufacturers..."
+                                        object-api-name="mfg__c"
+                                        value={manufacturerId}
+                                        onchange={handleManufacturerChange}>
+                                    </lightning-record-picker>
+                                </template>
+                                <template if:false={isEditable}>
+                                    <span class="slds-form-element__label">Manufacturer</span>
+                                    <div class="slds-form-element__static">{manufacturerName}</div>
+                                </template>
+                            </div>
+                        </div>
+                        <template if:true={showBaseMargin}>
+                            <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                                <div class="slds-form-element">
+                                    <template if:true={isEditable}>
+                                        <lightning-input
+                                            type="number"
+                                            label="Base Margin (%)"
+                                            step="1"
+                                            value={baseMarginPercent}
+                                            onchange={handleBaseMarginChange}>
+                                        </lightning-input>
+                                    </template>
+                                    <template if:false={isEditable}>
+                                        <span class="slds-form-element__label">Base Margin</span>
+                                        <div class="slds-form-element__static">
+                                            <lightning-formatted-number
+                                                value={baseMargin}
+                                                format-style="percent"
+                                                minimum-fraction-digits="2"
+                                                maximum-fraction-digits="2">
+                                            </lightning-formatted-number>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                        <template if:true={showLdp}>
+                            <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                                <div class="slds-form-element">
+                                    <template if:true={isEditable}>
+                                        <lightning-input
+                                            type="number"
+                                            label="LDP"
+                                            formatter="currency"
+                                            step="0.01"
+                                            value={ldp}
+                                            onchange={handleLdpChange}>
+                                        </lightning-input>
+                                    </template>
+                                    <template if:false={isEditable}>
+                                        <span class="slds-form-element__label">LDP</span>
+                                        <div class="slds-form-element__static">
+                                            <lightning-formatted-number
+                                                value={ldp}
+                                                format-style="currency"
+                                                currency-code="USD"
+                                                minimum-fraction-digits="2"
+                                                maximum-fraction-digits="4">
+                                            </lightning-formatted-number>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <template if:true={product.Description}>
+                <div class="slds-m-bottom_medium">
+                    <span class="slds-form-element__label">Description</span>
+                    <div class="slds-form-element__static slds-text-body_small">{product.Description}</div>
+                </div>
+            </template>
+
+            <!-- Manual entry notice when LDP/base margin aren't available to drive the cascade -->
+            <template if:true={showSimpleManualNotice}>
+                <div class="slds-scoped-notification slds-media slds-media_center slds-scoped-notification_light slds-m-bottom_small" role="status">
+                    <div class="slds-media__body">
+                        <p>Set LDP and Base Margin above, or enter sell prices manually for each tier.</p>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Pricing Table -->
+            <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped">
+                <thead>
+                    <tr class="slds-line-height_reset">
+                        <th class="slds-text-title_caps" scope="col">Quantity</th>
+                        <th class="slds-text-title_caps" scope="col">{priceColumnLabel}</th>
+                        <template if:true={showMarginColumn}>
+                            <th class="slds-text-title_caps" scope="col">{marginColumnLabel}</th>
+                        </template>
+                        <template if:true={hasAirTiers}>
+                            <th class="slds-text-title_caps" scope="col">Air Price</th>
+                        </template>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template for:each={pricingRows} for:item="row">
+                        <tr key={row.quantity} class={row.rowClass}>
+                            <td data-label="Quantity">
+                                <div class="slds-truncate">
+                                    <lightning-formatted-number
+                                        value={row.quantity}
+                                        format-style="decimal"
+                                        minimum-fraction-digits="0">
+                                    </lightning-formatted-number>
+                                    <template if:true={row.isBaseTier}>
+                                        <lightning-badge label="Base" class="slds-m-left_xx-small"></lightning-badge>
+                                    </template>
+                                </div>
+                            </td>
+                            <td data-label="Ocean Price">
+                                <lightning-input
+                                    type="number"
+                                    formatter="currency"
+                                    step="0.05"
+                                    value={row.oceanPrice}
+                                    data-quantity={row.quantity}
+                                    data-field="oceanPrice"
+                                    onchange={handlePriceChange}
+                                    variant="label-hidden"
+                                    class="price-input">
+                                </lightning-input>
+                            </td>
+                            <template if:true={showMarginColumn}>
+                                <td data-label="Ocean Margin">
+                                    <lightning-input
+                                        type="number"
+                                        formatter="percent-fixed"
+                                        step="0.01"
+                                        value={row.oceanMargin}
+                                        data-quantity={row.quantity}
+                                        data-field="oceanMargin"
+                                        onchange={handleMarginChange}
+                                        variant="label-hidden"
+                                        class="margin-input">
+                                    </lightning-input>
+                                </td>
+                            </template>
+                            <template if:true={row.hasAir}>
+                                <td data-label="Air Price">
+                                    <lightning-input
+                                        type="number"
+                                        formatter="currency"
+                                        step="0.05"
+                                        value={row.airPrice}
+                                        data-quantity={row.quantity}
+                                        data-field="airPrice"
+                                        onchange={handlePriceChange}
+                                        variant="label-hidden"
+                                        class="price-input">
+                                    </lightning-input>
+                                </td>
+                            </template>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+    </lightning-card>
+</template>
