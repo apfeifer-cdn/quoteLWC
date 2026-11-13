@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Commerce_Setup_Done__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>No longer in use</description>
+    <label>Commerce Setup Done (Deprecated)</label>
+    <trackFeedHistory>false</trackFeedHistory>
+    <type>Checkbox</type>
+</CustomField>

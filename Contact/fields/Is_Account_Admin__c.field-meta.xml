@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Is_Account_Admin__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>When true, this Contact is a delegated administrator for buyer users on their Account. The B2B_Account_Admin permission set is kept in sync by a trigger.</description>
+    <inlineHelpText>Designates this buyer as an account administrator who can manage other users on the same Account.</inlineHelpText>
+    <label>Is Account Admin</label>
+    <trackFeedHistory>false</trackFeedHistory>
+    <type>Checkbox</type>
+</CustomField>

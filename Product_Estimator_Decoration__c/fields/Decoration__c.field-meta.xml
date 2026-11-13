@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Decoration__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Product that is an option for main and/or additional decorations.</description>
+    <inlineHelpText>Product that is an option for main and/or additional decorations.</inlineHelpText>
+    <label>Decoration</label>
+    <referenceTo>Product2</referenceTo>
+    <relationshipLabel>Product Estimator Decorations (Decoration)</relationshipLabel>
+    <relationshipName>Product_Estimator_Decorations1</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

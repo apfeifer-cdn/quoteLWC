@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Is_Finance_User__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>When TRUE, this non-admin contact can view the Financial Status component on My Account. Set by an Account Admin via the B2B Account Users panel.</description>
+    <label>Is Finance User</label>
+    <trackFeedHistory>false</trackFeedHistory>
+    <type>Checkbox</type>
+</CustomField>
