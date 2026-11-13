@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Estimate_LDp__c</fullName>
+    <formula>(Estimated_Cost__c)+( (Estimate_Incremental__c) * (Estimated_Cost__c /100))+ Estimate_Fixed_Charges__c</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Estimate LDP</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>4</scale>
+    <trackHistory>false</trackHistory>
+    <type>Currency</type>
+</CustomField>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>All</fullName>
+    <columns>NAME</columns>
+    <columns>Ocean_ETA__c</columns>
+    <columns>Air_ETA__c</columns>
+    <columns>QT_ETA__c</columns>
+    <columns>X1008_Air_Rate__c</columns>
+    <columns>X576_Air_Rate__c</columns>
+    <columns>X288_Air_Rate__c</columns>
+    <columns>X144_Air_Rate__c</columns>
+    <columns>Air_Price_Adjustment_Schedule__c</columns>
+    <columns>Ocean_Price_Adjustment_Schedule__c</columns>
+    <filterScope>Everything</filterScope>
+    <label>All</label>
+</ListView>

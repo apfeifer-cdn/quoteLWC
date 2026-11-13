@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Estimate_Duty__c</fullName>
+    <externalId>false</externalId>
+    <formula>CASE(Tariff_Description__c,
+&quot;Cotton Knit Hat&quot;,7.90,
+&quot;Cotton Woven Hat&quot;,7.50,
+&quot;Cotton Woven Visor&quot;,7.50,
+&quot;Wool Knit Visor&quot;,7.70,
+&quot;Wool Knit Hat&quot;,7.70,
+&quot;Wool Woven Visor&quot;,7.90,
+&quot;Wool Woven Hat&quot;,7.90,
+&quot;Synthetic Knit Hat&quot;,7.00,
+&quot;Synthetic Knit Visor&quot;,7.00,
+&quot;Synthetic Woven Visor&quot;,6.80,
+&quot;Synthetic Woven Hat&quot;,6.80,
+&quot;Leather Caps&quot;,8.50,
+&quot;Sewn Straw Hat&quot;,6.00,
+&quot;Non-sewn Straw Hat&quot;,4.60,
+0.00)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Estimate Duty</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <trackHistory>false</trackHistory>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>

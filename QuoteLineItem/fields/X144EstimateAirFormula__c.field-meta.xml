@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>X144EstimateAirFormula__c</fullName>
+    <externalId>false</externalId>
+    <formula>IF(
+    TEXT(Manufactuturer__c) = &apos;Mainland CN&apos;,
+    X144_Ocean_Currency__c + Mainland_CN_Air_Freight__c,
+    IF(
+        TEXT(Manufactuturer__c) = &apos;Unimas&apos;,
+        X144_Ocean_Currency__c + Unimas_Air_Freight__c,
+        IF(
+            TEXT(Manufactuturer__c) = &apos;Ratone&apos;,
+            X144_Ocean_Currency__c + Ratone_144_Air_Freight__c,
+            IF(
+                TEXT(Manufactuturer__c) = &apos;J&amp;F&apos;,
+                X144_Ocean_Currency__c + JF_144_Air_Freight__c,
+                IF(
+                    TEXT(Manufactuturer__c) = &apos;Asian Sourcing&apos;,
+                    X144_Ocean_Currency__c + Asian_Sourcing_Air_Freight__c,
+                    0.00
+                )
+            )
+        )
+    )
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>X144EstimateAirFormula</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <trackHistory>false</trackHistory>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>

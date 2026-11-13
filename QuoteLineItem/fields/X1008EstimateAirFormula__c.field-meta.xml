@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>X1008EstimateAirFormula__c</fullName>
+    <externalId>false</externalId>
+    <formula>X1008_Estimate_Formula__c + 
+CASE(
+    TEXT(Manufactuturer__c),
+    &apos;Mainland CN&apos;, Mainland_CN_Air_Freight__c,
+    &apos;Unimas&apos;, Unimas_Air_Freight__c,
+    &apos;Ratone&apos;, Ratone_432_1296_Air_Freight__c,
+    &apos;J&amp;F&apos;, JF_432_1296_Air_Freight__c,
+    &apos;Asian Sourcing&apos;, Asian_Sourcing_Air_Freight__c,
+    0.00
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>X1008EstimateAirFormula</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <trackHistory>false</trackHistory>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>

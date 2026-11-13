@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Tariff_Description__c</fullName>
+    <label>Tariff Description</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Cotton Knit Hat</fullName>
+                <default>false</default>
+                <label>Cotton Knit Hat</label>
+            </value>
+            <value>
+                <fullName>Cotton Woven Hat</fullName>
+                <default>false</default>
+                <label>Cotton Woven Hat</label>
+            </value>
+            <value>
+                <fullName>Cotton Woven Visor</fullName>
+                <default>false</default>
+                <label>Cotton Woven Visor</label>
+            </value>
+            <value>
+                <fullName>Leather Caps</fullName>
+                <default>false</default>
+                <label>Leather Caps</label>
+            </value>
+            <value>
+                <fullName>Non-sewn Straw Hat</fullName>
+                <default>false</default>
+                <label>Non-sewn Straw Hat</label>
+            </value>
+            <value>
+                <fullName>Sewn Straw Hat</fullName>
+                <default>false</default>
+                <label>Sewn Straw Hat</label>
+            </value>
+            <value>
+                <fullName>Synthetic Knit Hat</fullName>
+                <default>false</default>
+                <label>Synthetic Knit Hat</label>
+            </value>
+            <value>
+                <fullName>Synthetic Knit Visor</fullName>
+                <default>false</default>
+                <label>Synthetic Knit Visor</label>
+            </value>
+            <value>
+                <fullName>Synthetic Woven Hat</fullName>
+                <default>false</default>
+                <label>Synthetic Woven Hat</label>
+            </value>
+            <value>
+                <fullName>Synthetic Woven Visor</fullName>
+                <default>false</default>
+                <label>Synthetic Woven Visor</label>
+            </value>
+            <value>
+                <fullName>Wool Knit Hat</fullName>
+                <default>false</default>
+                <label>Wool Knit Hat</label>
+            </value>
+            <value>
+                <fullName>Wool Knit Visor</fullName>
+                <default>false</default>
+                <label>Wool Knit Visor</label>
+            </value>
+            <value>
+                <fullName>Wool Woven Hat</fullName>
+                <default>false</default>
+                <label>Wool Woven Hat</label>
+            </value>
+            <value>
+                <fullName>Wool Woven Visor</fullName>
+                <default>false</default>
+                <label>Wool Woven Visor</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
