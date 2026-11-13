@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Can_View_All_Orders__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>When true, the buyer&apos;s order history shows all orders on their Account rather than only their own.</description>
+    <inlineHelpText>Allow this buyer to see every order placed by users on their Account.</inlineHelpText>
+    <label>Can View All Orders</label>
+    <trackFeedHistory>false</trackFeedHistory>
+    <type>Checkbox</type>
+</CustomField>

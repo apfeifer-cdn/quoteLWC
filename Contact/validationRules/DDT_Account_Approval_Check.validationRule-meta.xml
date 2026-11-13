@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>DDT_Account_Approval_Check</fullName>
+    <active>true</active>
+    <description>Check to ensure Account is approved for DDT Commerce before contact can be approved for Commerce.</description>
+    <errorConditionFormula>IF(AND(ISCHANGED(DRI_DUCK_Commerce_Status__c),  ISPICKVAL(DRI_DUCK_Commerce_Status__c, &apos;Approved&apos;)) , NOT(Account.Approved_for_DRI_DUCK_Wholesale__c), false)</errorConditionFormula>
+    <errorMessage>The associated account must be approved for DDT Commerce before the contact can be approved for commerce.</errorMessage>
+</ValidationRule>

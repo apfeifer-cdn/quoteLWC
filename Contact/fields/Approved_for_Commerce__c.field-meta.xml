@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Approved_for_Commerce__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>DEPRECATED as of 5.28.26. Replaced by Approved_for_Caps_Direct__c &amp; Approved_for_DRI_DUCK_Wholesale.</description>
+    <inlineHelpText>DEPRECATED as of 5.28.26. Replaced by Approved_for_Caps_Direct__c &amp; Approved_for_DRI_DUCK_Wholesale.</inlineHelpText>
+    <label>Approved for Commerce (Deprecated)</label>
+    <trackFeedHistory>false</trackFeedHistory>
+    <type>Checkbox</type>
+</CustomField>
