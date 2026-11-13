@@ -41,7 +41,7 @@ public with sharing class QuoteProductController {
         @AuraEnabled public List<QuoteLineItemData> lineItems;
     }
 
-    // Not cacheable: Quote_Description__c is written when a quote is created and the
+    // Not cacheable: Product2.Description is written when a quote is created and the
     // next quote must read the saved value, not a client-side cached copy.
     @AuraEnabled
     public static List<Product2> getProducts(String opportunityId) {
@@ -54,7 +54,7 @@ public with sharing class QuoteProductController {
         }
 
         List<Product2> allProducts = [
-            SELECT Id, Name, ProductCode, Description, ProductClass, Quote_Description__c,
+            SELECT Id, Name, ProductCode, Description, ProductClass,
                    LDP_SAP__c, LDP_144_SAP__c, LDP_288_SAP__c, LDP_432_SAP__c,
                    Opportunity_ID_SAP__c,
                    Special_Program_SAP__c, CDN_Style_ID_SAP__c,
@@ -649,7 +649,7 @@ public with sharing class QuoteProductController {
         // Keyed by the 18-character Id string the client sends.
         Map<String, Product2> quotedProducts = new Map<String, Product2>();
         for (Product2 p : [
-            SELECT Id, ProductCode, Special_Program_SAP__c, Quote_Description__c
+            SELECT Id, ProductCode, Special_Program_SAP__c, Description
             FROM Product2
             WHERE Id IN :productIds
         ]) {
@@ -782,10 +782,13 @@ public with sharing class QuoteProductController {
     }
 
     /**
-     * Save each line's custom description to Product2.Quote_Description__c so the next
-     * quote for the style starts with it. A failure here is logged and does not fail
+     * Save each line's custom description to Product2.Description (Text Area, 4000) so
+     * the next quote for the style starts with it. This replaces the product's existing
+     * description. A failure here is logged and does not fail
      * the quote, which is already inserted.
      */
+    private static final Integer PRODUCT_DESCRIPTION_MAX = 4000;
+
     private static void saveQuoteDescriptions(List<QuoteLineItemData> items, Map<String, Product2> quotedProducts) {
         Map<Id, Product2> updates = new Map<Id, Product2>();
         for (QuoteLineItemData item : items) {
@@ -793,11 +796,11 @@ public with sharing class QuoteProductController {
                 continue;
             }
             Product2 existing = quotedProducts.get(item.productId);
-            String description = item.customDescription.left(5000);
-            if (existing == null || existing.Quote_Description__c == description) {
+            String description = item.customDescription.trim().left(PRODUCT_DESCRIPTION_MAX);
+            if (existing == null || existing.Description == description) {
                 continue;
             }
-            updates.put(existing.Id, new Product2(Id = existing.Id, Quote_Description__c = description));
+            updates.put(existing.Id, new Product2(Id = existing.Id, Description = description));
         }
         if (updates.isEmpty()) {
             return;

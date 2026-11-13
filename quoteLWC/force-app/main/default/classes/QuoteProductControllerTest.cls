@@ -785,13 +785,13 @@ private class QuoteProductControllerTest {
         Map<String, Object> tier288 = (Map<String, Object>) snapshot.get('288');
         System.assertEquals(false, tier288.containsKey('price'), 'No price was sent for 288');
 
-        Product2 saved = [SELECT Quote_Description__c FROM Product2 WHERE Id = :prod.Id];
-        System.assertEquals('Navy crown, white rope', saved.Quote_Description__c,
+        Product2 saved = [SELECT Description FROM Product2 WHERE Id = :prod.Id];
+        System.assertEquals('Navy crown, white rope', saved.Description,
             'Custom description should be saved to the product for the next quote');
 
         List<Product2> reloaded = QuoteProductController.getProducts('TEST-OPP-NAC');
         System.assertEquals(1, reloaded.size());
-        System.assertEquals('Navy crown, white rope', reloaded[0].Quote_Description__c);
+        System.assertEquals('Navy crown, white rope', reloaded[0].Description);
     }
 
     @IsTest
@@ -800,5 +800,13 @@ private class QuoteProductControllerTest {
         System.assertEquals(null, QuoteProductController.buildCostSnapshot(lineItem));
         lineItem.tierLdps = new Map<String, Decimal>{ '144' => null };
         System.assertEquals(null, QuoteProductController.buildCostSnapshot(lineItem));
+    }
+
+    @IsTest
+    static void testPdfDescriptionDuplicateCheck() {
+        System.assertEquals(true, ProductImageController.isSameText('Navy crown\r\nwhite rope ', 'Navy crown\nwhite rope'));
+        System.assertEquals(false, ProductImageController.isSameText('Navy crown', 'Black crown'));
+        System.assertEquals(false, ProductImageController.isSameText(null, 'Navy crown'));
+        System.assertEquals(false, ProductImageController.isSameText('', ''));
     }
 }

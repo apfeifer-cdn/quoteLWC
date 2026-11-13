@@ -240,15 +240,14 @@ export default class QuoteProductSelector extends NavigationMixin(LightningEleme
         return this.currentOverride?.leadTime ?? '21 days';
     }
 
-    // The description saved from the last quote of this style (Product2.Quote_Description__c)
-    // is pre-filled; anything typed in this session takes precedence.
+    // The product's Description is pre-filled; anything typed in this session takes
+    // precedence. On quote creation the typed text is saved back to Product2.Description.
     get savedDescription() {
-        return this.currentProduct?.Quote_Description__c || '';
+        return this.currentProduct?.Description || '';
     }
 
     get showCustomDescription() {
-        const toggled = this.currentOverride?.showCustomDescription;
-        return toggled != null ? toggled : !!this.savedDescription;
+        return this.currentOverride?.showCustomDescription || false;
     }
 
     get currentCustomDescription() {

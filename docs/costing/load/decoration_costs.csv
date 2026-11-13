@@ -1,4 +1,4 @@
-Id,ProductCode,Name,Decoration_Cost__c,Additional_Location_Cost__c,Source_Note
+Id,ProductCode,Name,Main_Decoration_Cost__c,Additional_Location_Cost__c,Source_Note
 01tPU00000NOX0nYAH,3DEmbroidery,3D Embroidery,1.3,0.7,13K/15K 3D embroidery
 01tPU00000NSUqjYAH,3DPrintLargeLogo,3D Print - Large Logo,2.5,,Not available as a second location
 01tPU00000NSUdpYAH,3DPrintLettering,3D Print - Lettering,1.5,1.5,3D Letters

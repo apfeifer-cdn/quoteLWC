@@ -32,10 +32,10 @@ Mexico Quick Turn today: `LDP = tier FOB x 1.045 + 0.10`.
 | Data | Location |
 | --- | --- |
 | Blank FOB | `Product2.Blank_FOB__c` on the base style (`Estimator__c = Product`) |
-| Decoration cost | `Product2.Decoration_Cost__c` and `Product2.Additional_Location_Cost__c` on the decoration product |
+| Decoration cost | `Product2.Main_Decoration_Cost__c` and `Product2.Additional_Location_Cost__c` on the decoration product |
 | Percent and per-piece charges | nine `mfg__c` fields labelled "LDP ..." |
 | Small-quantity upcharges | `Manufacturer_Upcharge__c` rows under the manufacturer (range, Multiplier or Dollar, value) |
-| Saved quote description | `Product2.Quote_Description__c` |
+| Saved quote description | `Product2.Description` (standard field, replaced with the text typed in the wizard) |
 | Per-line audit snapshot | `QuoteLineItem.Cost_Snapshot__c` (JSON, never read by the PDF pages) |
 
 The manufacturer used is the quoted product's `Manufacturer__c` (or the one picked on the decision screen).
@@ -87,7 +87,7 @@ sf project deploy validate --source-dir force-app --test-level RunSpecifiedTests
       broker 0.01, freight 0.05, warehouse 0.01, marketing 0.02, compliance 0.01.
    2. `manufacturer_upcharges.csv` (insert; replace the placeholder with that record's Id).
    3. `blank_fob.csv` (update Product2 by Id).
-   4. `decoration_costs.csv` (update Product2 by Id; map only `Decoration_Cost__c` and
+   4. `decoration_costs.csv` (update Product2 by Id; map only `Main_Decoration_Cost__c` and
       `Additional_Location_Cost__c`).
 
 The Ids in `blank_fob.csv` and `decoration_costs.csv` are sandbox Ids. Before loading

@@ -2,9 +2,9 @@
  * Estimates landed duty paid (LDP) cost per quantity tier for a decorated base style.
  *
  *   base FOB  = Product2.Blank_FOB__c (base style)
- *             + Product2.Decoration_Cost__c (main decoration)
+ *             + Product2.Main_Decoration_Cost__c (main decoration)
  *             + Additional_Location_Cost__c of each additional decoration
- *               (falls back to Decoration_Cost__c, with a warning, when blank)
+ *               (falls back to Main_Decoration_Cost__c, with a warning, when blank)
  *   tier FOB  = base FOB with the manufacturer's upcharge for the quantity
  *               (Manufacturer_Upcharge__c: Multiplier or Dollar)
  *   LDP       = tier FOB * (1 + duty + MPF + insurance + finance)
@@ -110,7 +110,7 @@ public with sharing class QuoteCostService {
         Set<Id> productIds = new Set<Id>{ estimatorProductId, mainDecorationId };
         productIds.addAll(additionalIds);
         Map<Id, Product2> products = new Map<Id, Product2>([
-            SELECT Id, Name, ProductCode, Blank_FOB__c, Decoration_Cost__c, Additional_Location_Cost__c
+            SELECT Id, Name, ProductCode, Blank_FOB__c, Main_Decoration_Cost__c, Additional_Location_Cost__c
             FROM Product2
             WHERE Id IN :productIds
         ]);
@@ -129,7 +129,7 @@ public with sharing class QuoteCostService {
             result.message = 'Main decoration not found.';
             return result;
         }
-        if (mainDecoration.Decoration_Cost__c == null) {
+        if (mainDecoration.Main_Decoration_Cost__c == null) {
             result.message = 'Decoration cost is not set on ' + mainDecoration.Name + '.';
             return result;
         }
@@ -163,8 +163,8 @@ public with sharing class QuoteCostService {
         Decimal baseFob = baseStyle.Blank_FOB__c;
         result.lines.add(line('Blank ' + displayName(baseStyle), baseStyle.Blank_FOB__c));
 
-        baseFob += mainDecoration.Decoration_Cost__c;
-        result.lines.add(line(mainDecoration.Name, mainDecoration.Decoration_Cost__c));
+        baseFob += mainDecoration.Main_Decoration_Cost__c;
+        result.lines.add(line(mainDecoration.Name, mainDecoration.Main_Decoration_Cost__c));
 
         for (Id additionalId : additionalIds) {
             Product2 decoration = products.get(additionalId);
@@ -173,10 +173,10 @@ public with sharing class QuoteCostService {
                 continue;
             }
             Decimal cost = decoration.Additional_Location_Cost__c;
-            if (cost == null && decoration.Decoration_Cost__c != null) {
+            if (cost == null && decoration.Main_Decoration_Cost__c != null) {
                 // A blank additional-location cost means the decoration is not offered as an
                 // additional location. Cost it at the main-location rate and tell the user.
-                cost = decoration.Decoration_Cost__c;
+                cost = decoration.Main_Decoration_Cost__c;
                 result.warnings.add(decoration.Name
                     + ' has no additional-location cost; its main-location cost was used.');
             }

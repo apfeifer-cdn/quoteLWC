@@ -18,9 +18,9 @@ private class QuoteCostServiceTest {
         f.baseStyle = new Product2(Name = 'Polyester Boonie', ProductCode = 'T-1100PR',
             IsActive = true, Blank_FOB__c = 6.2737);
         f.mainDecoration = new Product2(Name = 'Flat Embroidery', ProductCode = 'T-FlatEmb',
-            IsActive = true, Decoration_Cost__c = 0.70, Additional_Location_Cost__c = 0.49);
+            IsActive = true, Main_Decoration_Cost__c = 0.70, Additional_Location_Cost__c = 0.49);
         f.secondLocation = new Product2(Name = 'Sublimation Patch', ProductCode = 'T-SubPatch',
-            IsActive = true, Decoration_Cost__c = 0.82);
+            IsActive = true, Main_Decoration_Cost__c = 0.82);
         f.uncosted = new Product2(Name = 'UPC Sticker', ProductCode = 'T-Upc', IsActive = true);
         f.additionalOnly = new Product2(Name = 'Visor Rope', ProductCode = 'T-Rope',
             IsActive = true, Additional_Location_Cost__c = 0.25);

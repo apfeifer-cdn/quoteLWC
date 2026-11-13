@@ -70,7 +70,10 @@ public class ProductImageController {
             pm.Name = item.Product2.Name;
             pm.ProductCode = item.Product2.ProductCode;
             pm.Description = item.Product2.Description;
-            pm.Custom_Description = item.Custom_Description__c;
+            // The quote tool saves the custom description to Product2.Description, so the
+            // two are normally identical. Print the text once.
+            pm.Custom_Description = isSameText(item.Custom_Description__c, item.Product2.Description)
+                ? null : item.Custom_Description__c;
             pm.Mold_Charge = item.Mold_Charge__c;
             pm.COO = String.isNotBlank(item.COO_Override__c)
                 ? item.COO_Override__c : item.COO__c;
@@ -180,6 +183,15 @@ public class ProductImageController {
     }
 
     // Get the latest ContentVersion records for a set of Product IDs
+    /** True when both texts are non-blank and equal, ignoring line-ending and outer whitespace differences. */
+    @TestVisible
+    private static Boolean isSameText(String first, String second) {
+        if (String.isBlank(first) || String.isBlank(second)) {
+            return false;
+        }
+        return first.replace('\r\n', '\n').trim() == second.replace('\r\n', '\n').trim();
+    }
+
     public static Map<Id, ContentVersion> getLatestFileVersionsForProducts(Set<Id> productIds) {
         Map<Id, ContentVersion> mapProductContentVersions = new Map<Id, ContentVersion>();
 

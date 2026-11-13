@@ -175,16 +175,16 @@
                         <div class="slds-m-bottom_medium">
                             <lightning-input
                                 type="checkbox"
-                                label="Add Description"
+                                label="Edit Description"
                                 checked={showCustomDescription}
                                 onchange={handleToggleCustomDescription}>
                             </lightning-input>
                             <template if:true={showCustomDescription}>
                                 <div class="slds-m-top_small">
                                     <lightning-textarea
-                                        label="Custom Description"
+                                        label="Description"
                                         value={currentCustomDescription}
-                                        max-length="5000"
+                                        max-length="4000"
                                         onchange={handleCustomDescriptionChange}>
                                     </lightning-textarea>
                                 </div>

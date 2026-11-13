@@ -18,12 +18,7 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>Product2.Decoration_Cost__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Product2.Quote_Description__c</field>
+        <field>Product2.Main_Decoration_Cost__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
