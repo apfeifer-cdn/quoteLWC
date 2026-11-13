@@ -18,7 +18,7 @@ quoteLWC/
 base FOB = Blank FOB (base style)
          + Decoration Cost, main location (main decoration)
          + Decoration Cost, additional location (each additional decoration;
-           falls back to the main location cost when blank)
+           falls back to the main location cost, with a warning, when blank)
 tier FOB = base FOB with the manufacturer upcharge for the quantity
 LDP      = tier FOB x (1 + duty% + MPF% + insurance% + finance%)
          + broker + freight + warehouse + marketing + compliance
@@ -87,7 +87,11 @@ sf project deploy validate --source-dir force-app --test-level RunSpecifiedTests
       broker 0.01, freight 0.05, warehouse 0.01, marketing 0.02, compliance 0.01.
    2. `manufacturer_upcharges.csv` (insert; replace the placeholder with that record's Id).
    3. `blank_fob.csv` (update Product2 by Id).
-   4. `decoration_costs.csv` (update Product2 by Id, after reviewing the rows marked CONFIRM).
+   4. `decoration_costs.csv` (update Product2 by Id; map only `Decoration_Cost__c` and
+      `Additional_Location_Cost__c`).
+
+The Ids in `blank_fob.csv` and `decoration_costs.csv` are sandbox Ids. Before loading
+production, replace them with production Ids matched on `ProductCode`.
 
 The deploy only adds fields, one object, one permission set and code. It is safe to re-run.
 

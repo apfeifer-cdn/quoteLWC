@@ -4,7 +4,7 @@
  *   base FOB  = Product2.Blank_FOB__c (base style)
  *             + Product2.Decoration_Cost__c (main decoration)
  *             + Additional_Location_Cost__c of each additional decoration
- *               (falls back to Decoration_Cost__c when blank)
+ *               (falls back to Decoration_Cost__c, with a warning, when blank)
  *   tier FOB  = base FOB with the manufacturer's upcharge for the quantity
  *               (Manufacturer_Upcharge__c: Multiplier or Dollar)
  *   LDP       = tier FOB * (1 + duty + MPF + insurance + finance)
@@ -172,9 +172,14 @@ public with sharing class QuoteCostService {
                 result.warnings.add('An additional decoration was not found and was left out of the cost.');
                 continue;
             }
-            Decimal cost = decoration.Additional_Location_Cost__c != null
-                ? decoration.Additional_Location_Cost__c
-                : decoration.Decoration_Cost__c;
+            Decimal cost = decoration.Additional_Location_Cost__c;
+            if (cost == null && decoration.Decoration_Cost__c != null) {
+                // A blank additional-location cost means the decoration is not offered as an
+                // additional location. Cost it at the main-location rate and tell the user.
+                cost = decoration.Decoration_Cost__c;
+                result.warnings.add(decoration.Name
+                    + ' has no additional-location cost; its main-location cost was used.');
+            }
             if (cost == null) {
                 result.warnings.add('No cost on file for ' + decoration.Name + '; it is counted as $0.');
                 cost = 0;

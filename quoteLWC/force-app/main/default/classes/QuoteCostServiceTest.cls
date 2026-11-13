@@ -8,6 +8,7 @@ private class QuoteCostServiceTest {
         Product2 mainDecoration;
         Product2 secondLocation;
         Product2 uncosted;
+        Product2 additionalOnly;
         mfg__c manufacturer;
     }
 
@@ -21,7 +22,9 @@ private class QuoteCostServiceTest {
         f.secondLocation = new Product2(Name = 'Sublimation Patch', ProductCode = 'T-SubPatch',
             IsActive = true, Decoration_Cost__c = 0.82);
         f.uncosted = new Product2(Name = 'UPC Sticker', ProductCode = 'T-Upc', IsActive = true);
-        insert new List<Product2>{ f.baseStyle, f.mainDecoration, f.secondLocation, f.uncosted };
+        f.additionalOnly = new Product2(Name = 'Visor Rope', ProductCode = 'T-Rope',
+            IsActive = true, Additional_Location_Cost__c = 0.25);
+        insert new List<Product2>{ f.baseStyle, f.mainDecoration, f.secondLocation, f.uncosted, f.additionalOnly };
 
         f.manufacturer = new mfg__c(
             Name = 'Test MLMX QT',
@@ -104,10 +107,28 @@ private class QuoteCostServiceTest {
         // 6.2737 + 0.70 main + 0.49 second-location embroidery + 0.82 patch + 0 uncosted
         System.assertEquals(8.2837, result.baseFob);
         System.assertEquals(5, result.lines.size());
-        System.assertEquals(1, result.warnings.size(), 'Uncosted additional decoration is flagged');
-        System.assert(result.warnings[0].contains('UPC Sticker'));
+        System.assertEquals(2, result.warnings.size(), 'Fallback and uncosted decorations are flagged');
+        System.assert(result.warnings[0].contains('Sublimation Patch'), 'Main-location cost fallback is flagged');
+        System.assert(result.warnings[1].contains('UPC Sticker'), 'Uncosted decoration is flagged');
         // 8.2837 * 1.045 + 0.10 = 8.7565
         System.assertEquals(8.7565, result.tiers[0].ldp);
+    }
+
+    @IsTest
+    static void additionalOnlyDecorationCostsWithoutWarningAndCannotBeMain() {
+        Fixture f = buildFixture();
+
+        QuoteCostService.CostResult asAdditional = QuoteCostService.calculate(
+            f.baseStyle.Id, f.mainDecoration.Id, new List<String>{ f.additionalOnly.Id },
+            f.manufacturer.Id, new List<Integer>{ 576 });
+        System.assertEquals(true, asAdditional.available, asAdditional.message);
+        System.assertEquals(7.2237, asAdditional.baseFob, '6.2737 + 0.70 + 0.25');
+        System.assertEquals(0, asAdditional.warnings.size());
+
+        QuoteCostService.CostResult asMain = QuoteCostService.calculate(
+            f.baseStyle.Id, f.additionalOnly.Id, null, f.manufacturer.Id, new List<Integer>{ 576 });
+        System.assertEquals(false, asMain.available, 'No main-location cost on file');
+        System.assert(asMain.message.contains('Visor Rope'));
     }
 
     @IsTest
