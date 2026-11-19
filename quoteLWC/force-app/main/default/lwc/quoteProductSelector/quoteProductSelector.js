@@ -132,6 +132,11 @@ export default class QuoteProductSelector extends NavigationMixin(LightningEleme
         return map;
     }
 
+    get currentCostMessage() {
+        const costs = this.currentEstimateData?.costs;
+        return costs && !costs.available ? costs.message : null;
+    }
+
     get tierQuantities() {
         return this.filteredTiers.map(t => t.quantity);
     }
