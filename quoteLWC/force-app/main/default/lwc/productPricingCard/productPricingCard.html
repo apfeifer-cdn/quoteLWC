@@ -127,6 +127,14 @@
                 </div>
             </template>
 
+            <template if:true={showCostWarnings}>
+                <div class="slds-scoped-notification slds-media slds-media_center slds-scoped-notification_light slds-m-bottom_small" role="status">
+                    <div class="slds-media__body">
+                        <p>{costWarnings}</p>
+                    </div>
+                </div>
+            </template>
+
             <!-- Pricing Table -->
             <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped">
                 <thead>

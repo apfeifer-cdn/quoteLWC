@@ -30,6 +30,7 @@ export default class ProductPricingCard extends LightningElement {
     @api costPlus = false;   // true: sell price = tier LDP / (1 - base margin) (North American Custom)
     @api hideAir = false;    // true: never show or emit Air prices
     @api costMessage;        // why the cost service could not estimate LDP, if it could not
+    @api costWarnings;       // caveats on an LDP that was estimated
 
     _pricingRows = [];
     _initialized = false;
@@ -155,6 +156,10 @@ export default class ProductPricingCard extends LightningElement {
 
     get showCostNotice() {
         return this.usesTierLdp && !this.hasTierCosts;
+    }
+
+    get showCostWarnings() {
+        return this.usesTierLdp && this.hasTierCosts && !!this.costWarnings;
     }
 
     get costNoticeText() {

@@ -137,6 +137,12 @@ export default class QuoteProductSelector extends NavigationMixin(LightningEleme
         return costs && !costs.available ? costs.message : null;
     }
 
+    // Cost caveats (for example an add-on with no cost on file), shown on the pricing card.
+    get currentCostWarnings() {
+        const costs = this.currentEstimateData?.costs;
+        return costs?.available && costs.warnings?.length ? costs.warnings.join(' ') : null;
+    }
+
     get tierQuantities() {
         return this.filteredTiers.map(t => t.quantity);
     }

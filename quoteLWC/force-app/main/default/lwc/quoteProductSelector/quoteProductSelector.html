@@ -231,6 +231,7 @@
                     override-manufacturer-rates={currentManufacturerRates}
                     tier-costs={currentTierCosts}
                     cost-message={currentCostMessage}
+                    cost-warnings={currentCostWarnings}
                     cost-plus={isNaCustom}
                     hide-air={isQuickLike}
                     onpricingchange={handlePricingChange}>
@@ -299,7 +300,6 @@
                 manufacturer-id={currentManufacturerId}
                 quantities={tierQuantities}
                 cost-only={isNaCustom}
-                base-margin-percent={currentBaseMarginPercent}
                 onestimatecomplete={handleEstimateComplete}
                 oncancel={handleCancelEstimator}>
             </c-quote-estimator>

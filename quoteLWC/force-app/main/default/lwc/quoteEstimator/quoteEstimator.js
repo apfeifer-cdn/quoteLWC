@@ -24,8 +24,6 @@ export default class QuoteEstimator extends LightningElement {
     @api quantities;
     // true for North American Custom: no list price, sell price is cost-plus.
     @api costOnly = false;
-    // Account base margin in percent form (35 for 35%); used in cost-only mode.
-    @api baseMarginPercent;
 
     // Internal state
     estimatorProduct = null;    // matched Product2 where ProductCode = CDN_Style_ID_SAP__c
@@ -162,86 +160,6 @@ export default class QuoteEstimator extends LightningElement {
     get priceAtQuantity() {
         if (!this.estimateResult) return null;
         return this.roundNickel(this.estimateResult.totalPrice - this.quantityAdjustment);
-    }
-
-    // --- Cost ---
-
-    get hasCost() {
-        return !!this.costResult?.available;
-    }
-
-    get costMessage() {
-        return this.costResult && !this.costResult.available ? this.costResult.message : '';
-    }
-
-    get costWarnings() {
-        return (this.costResult?.warnings || []).map((text, idx) => ({ key: 'warn-' + idx, text }));
-    }
-
-    get costLines() {
-        return (this.costResult?.lines || []).map((line, idx) => ({ ...line, key: 'cost-' + idx }));
-    }
-
-    get costTier() {
-        if (!this.hasCost) return null;
-        return this.costResult.tiers.find(t => t.quantity === this.displayQuantity) || null;
-    }
-
-    get costHeading() {
-        return 'Estimated Cost at ' + this.displayQuantity + ' pcs (internal)';
-    }
-
-    get baseFob() {
-        return this.costResult?.baseFob;
-    }
-
-    get hasUpcharge() {
-        return !!this.costTier?.upchargeType;
-    }
-
-    get upchargeLabel() {
-        const tier = this.costTier;
-        if (!tier?.upchargeType) return '';
-        return tier.upchargeType === 'Multiplier'
-            ? 'Small-quantity upcharge (' + tier.upchargeValue + 'x FOB)'
-            : 'Small-quantity upcharge (per piece)';
-    }
-
-    get upchargeAmount() {
-        const tier = this.costTier;
-        return tier ? tier.fob - this.costResult.baseFob : null;
-    }
-
-    get landedCharges() {
-        const tier = this.costTier;
-        return tier ? tier.ldp - tier.fob : null;
-    }
-
-    get ldpAtQuantity() {
-        return this.costTier?.ldp ?? null;
-    }
-
-    // Sell price the margin is measured against: list-driven price, or cost-plus.
-    get sellPriceAtQuantity() {
-        if (!this.costOnly) return this.priceAtQuantity;
-        const ldp = this.ldpAtQuantity;
-        const margin = Number(this.baseMarginPercent) / 100;
-        if (!(ldp > 0) || !(margin > 0) || margin >= 1) return null;
-        return this.roundNickel(ldp / (1 - margin));
-    }
-
-    get showCostPlusPrice() {
-        return this.costOnly && this.sellPriceAtQuantity != null;
-    }
-
-    get marginAtQuantity() {
-        const ldp = this.ldpAtQuantity;
-        const price = this.sellPriceAtQuantity;
-        return ldp > 0 && price > 0 ? 1 - ldp / price : null;
-    }
-
-    get hasMargin() {
-        return this.marginAtQuantity != null;
     }
 
     // --- Lifecycle ---
