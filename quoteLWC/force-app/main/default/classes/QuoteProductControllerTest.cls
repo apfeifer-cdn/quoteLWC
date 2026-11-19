@@ -751,8 +751,9 @@ private class QuoteProductControllerTest {
         );
         insert opp;
 
-        // SKU ending in MCCUST00 marks a North American Custom product.
-        Product2 prod = buildProduct('NA Custom Cap', 'ABC-MCCUST00', 'Simple', 4.00, 'TEST-OPP-NAC', null, null);
+        // Special program QuickTurnNAC marks a North American Custom product.
+        Product2 prod = buildProduct('NA Custom Cap', 'NAC-001', 'Simple', 4.00, 'TEST-OPP-NAC', null, null);
+        prod.Special_Program_SAP__c = 'QuickTurnNAC';
         insert prod;
         ensurePricebookEntry(stdPricebookId, prod.Id, 10.00);
 

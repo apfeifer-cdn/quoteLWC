@@ -9,7 +9,7 @@ import getBaseStylePricing from '@salesforce/apex/QuoteProductController.getBase
 import getManufacturerAirRates from '@salesforce/apex/QuoteProductController.getManufacturerAirRates';
 import getQuotePdfBase64 from '@salesforce/apex/QuoteProductController.getQuotePdfBase64';
 
-const NA_CUSTOM_SUFFIX = 'MCCUST00';
+const NA_CUSTOM_PROGRAM = 'quickturnnac';
 
 const STEP_LOADING = 'loading';
 const STEP_PRODUCT = 'product';
@@ -99,15 +99,15 @@ export default class QuoteProductSelector extends NavigationMixin(LightningEleme
         return this.currentStep === STEP_ESTIMATOR;
     }
 
-    // North American Custom: SKU ends in MCCUST00. Costed like Quick Turn (LDP from
+    // North American Custom: Special_Program_SAP__c = QuickTurnNAC. Costed like Quick Turn (LDP from
     // FOB + decorations), priced cost-plus from the account base margin, never Air.
     get isNaCustom() {
-        const code = (this.currentProduct?.ProductCode || '').trim().toUpperCase();
-        return code.endsWith(NA_CUSTOM_SUFFIX);
+        const program = (this.currentProduct?.Special_Program_SAP__c || '').trim().toLowerCase();
+        return program === NA_CUSTOM_PROGRAM;
     }
 
     // List-driven Quick Turn: price from the Authenticated pricebook via the estimator.
-    // North American Custom may also carry a Quick special program, so it is excluded here.
+    // QuickTurnNAC also contains "quick", so North American Custom is excluded here.
     get isQuickProduct() {
         const sp = this.currentProduct?.Special_Program_SAP__c;
         return !!sp && sp.toLowerCase().includes('quick') && !this.isNaCustom;

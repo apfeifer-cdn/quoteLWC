@@ -98,10 +98,10 @@ public class ProductImageController {
             // Quick products display only the user-selected lead time and no Air column.
             String productClass = item.Product2.ProductClass;
             String specialProgram = item.Product2.Special_Program_SAP__c;
-            // North American Custom (SKU ends in MCCUST00) is presented like Quick Turn:
+            // North American Custom (special program QuickTurnNAC) is presented like Quick Turn:
             // one lead time and no Air prices.
             Boolean isQuick = QuoteCostService.isQuickProgram(specialProgram)
-                || QuoteCostService.isNorthAmericanCustom(item.Product2.ProductCode);
+                || QuoteCostService.isNorthAmericanCustom(specialProgram);
             pm.ShowAir = !isQuick;
             pm.IsQuick = isQuick;
 

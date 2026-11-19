@@ -22,7 +22,7 @@ public with sharing class QuoteCostService {
 
     public static final String UPCHARGE_MULTIPLIER = 'Multiplier';
     public static final String UPCHARGE_DOLLAR = 'Dollar';
-    public static final String NA_CUSTOM_SUFFIX = 'MCCUST00';
+    public static final String NA_CUSTOM_PROGRAM = 'QuickTurnNAC';
 
     @TestVisible private static final Integer MAX_QUANTITIES = 50;
     @TestVisible private static final Integer MAX_ADDITIONAL_DECORATIONS = 25;
@@ -61,12 +61,11 @@ public with sharing class QuoteCostService {
     }
 
     /**
-     * North American Custom products are identified by a SKU ending in MCCUST00. They are
+     * North American Custom products have Special_Program_SAP__c = QuickTurnNAC. They are
      * costed like Quick Turn products and never show air pricing.
      */
-    public static Boolean isNorthAmericanCustom(String productCode) {
-        return String.isNotBlank(productCode)
-            && productCode.trim().toUpperCase().endsWith(NA_CUSTOM_SUFFIX);
+    public static Boolean isNorthAmericanCustom(String specialProgram) {
+        return specialProgram != null && specialProgram.trim().equalsIgnoreCase(NA_CUSTOM_PROGRAM);
     }
 
     public static Boolean isQuickProgram(String specialProgram) {

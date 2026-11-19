@@ -222,8 +222,9 @@ private class QuoteCostServiceTest {
         System.assertEquals(null, QuoteCostService.computeLdp(null, new QuoteCostService.Charges()));
         System.assertEquals(null, QuoteCostService.computeLdp(5, null));
 
-        System.assertEquals(true, QuoteCostService.isNorthAmericanCustom('abc-mccust00 '));
-        System.assertEquals(false, QuoteCostService.isNorthAmericanCustom('MCCUST00-X'));
+        System.assertEquals(true, QuoteCostService.isNorthAmericanCustom('QuickTurnNAC'));
+        System.assertEquals(true, QuoteCostService.isNorthAmericanCustom(' quickturnnac '));
+        System.assertEquals(false, QuoteCostService.isNorthAmericanCustom('QuickTurn'));
         System.assertEquals(false, QuoteCostService.isNorthAmericanCustom(null));
         System.assertEquals(true, QuoteCostService.isQuickProgram('QuickTurn'));
         System.assertEquals(false, QuoteCostService.isQuickProgram(null));

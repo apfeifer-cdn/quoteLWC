@@ -699,7 +699,7 @@ public with sharing class QuoteProductController {
             Product2 quoted = quotedProducts.get(item.productId);
             Boolean allowAir = quoted == null
                 || !(QuoteCostService.isQuickProgram(quoted.Special_Program_SAP__c)
-                     || QuoteCostService.isNorthAmericanCustom(quoted.ProductCode));
+                     || QuoteCostService.isNorthAmericanCustom(quoted.Special_Program_SAP__c));
 
             String snapshot = buildCostSnapshot(item);
             if (snapshot != null) {

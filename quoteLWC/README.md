@@ -67,8 +67,8 @@ keeps working without a cost.
 
 | Type | How it is identified | Sell price | Air |
 | --- | --- | --- | --- |
-| Quick Turn | `Special_Program_SAP__c` contains "quick" | Authenticated list price, editable | hidden |
-| North American Custom | `ProductCode` ends in `MCCUST00` | tier LDP / (1 - account base margin), editable | hidden |
+| Quick Turn | `Special_Program_SAP__c` contains "quick" (other than `QuickTurnNAC`) | Authenticated list price, editable | hidden |
+| North American Custom | `Special_Program_SAP__c` = `QuickTurnNAC` | tier LDP / (1 - account base margin), editable | hidden |
 | Everything else | | unchanged | unchanged |
 
 ## Deploy
